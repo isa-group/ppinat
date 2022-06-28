@@ -1,0 +1,243 @@
+# Ways to request the measurement of a PPI for a given event log
+
+%[measures]('training': '12036')
+    *[30%] ~[timeMeasure]
+    *[30%] ~[countMeasure]
+    *[20%] ~[timeMeasureWithConditional]
+    *[20%] ~[dataMeasure]
+
+~[timeMeasure]
+    ~[the?] @[TMI] ~[TSI] @[TSE] ~[TEI] @[TEE]
+    ~[the?] @[AGR] @[TMI] @[TBE] ~[groupBy?]
+    ~[the?] @[AGR] @[TMI] ~[TSI] @[TSE] ~[TEI] @[TEE]
+    ~[the?] @[TMI] @[TBE]
+    ~[the?] @[TMI] ~[TEI_only_TEE] @[TEE]
+~[countMeasure]
+    *[50%] ~[the?] @[AGRCount] @[CMI] @[CE] ~[groupBy?] ~[conditionMeasure?]
+    *[50%] ~[the?] @[AggFunction] @[CE] ~[groupBy?] ~[conditionMeasure?] ~[denominator?]
+~[timeMeasureWithConditional]
+    ~[the?] @[TMI] ~[TSI] @[TSE] ~[TEI] @[TEE] ~[conditionMeasure]
+    ~[the?] @[AGR] @[TMI] @[TBE] ~[groupBy?] ~[conditionMeasure]
+    ~[the?] @[AGR] @[TMI] ~[TSI] @[TSE] ~[TEI] @[TEE] ~[conditionMeasure]
+    ~[the?] @[TMI] @[TBE] ~[conditionMeasure]
+~[dataMeasure]
+    the value of @[AttributeName]
+    i want to obtain the value of attribute @[AttributeName]
+    the value of @[AttributeName] in every case
+    i want to compute the values of the attribute @[AttributeName] in each case
+    @[AGR] ~[conditionMeasureData?] @[AttributeName] 
+~[conditionMeasure]
+    @[CCI] @[AttributeValue] 
+~[groupBy]
+    @[GBI] @[GBC]
+~[denominator]
+    @[FDI] @[FDE]
+~[conditionMeasureData]
+    @[CCIData] @[AttributeValueData]
+@[CCIData]
+    incidents with
+    activities with
+@[AttributeValueData]
+    major
+    closed
+    opened
+    fixed
+    reopened
+    minor
+    p1
+    p2
+@[AttributeName]
+    state
+    priority
+    impact
+@[TMI]
+    elapsed time
+    time
+    time elevated
+    time of
+    lifetime of
+    duration
+    real time
+    delays
+    time spent
+~[TSI]
+    between an
+    between
+    from
+    between the time instants when
+@[TSE]
+    action requirement is notified
+    action is performed
+    the notification to contractor of the installation requirement
+    APC contracts the service
+    the end and closure of the installation
+    repair notification
+    the notification to contractor of the intervention requirement
+    the resource (technician) assignment
+    the technician arrival to headquarters
+    the end and closure to intervention at headquarters
+    activity1 becomes state1
+    that it is communicate to REDES
+    opening
+    opened
+    fixed
+~[TEI]
+    until
+    until the
+    and
+    and when
+    to
+~[TEI_only_TEE]
+    until
+    until the
+@[TEE]
+    the action is performed
+    corresponding documentation is delivered
+    its planning
+    contractor is able to start it
+    the documentation submission
+    repair its ended and closured
+    the intervention start time
+    the end and closure of the intervention
+    activity2 becomes state2
+    the user is notified that its incident due to the blocked domain at the router level has been solved
+    resolution of the incident
+    closed
+    fixed
+@[AGR]
+    average
+    total
+    total average
+    minimum
+    minimal
+    maximum
+    maximal
+    percentage of
+    fraction of
+@[AGRCount]
+    average
+    total
+    total average
+    minimum
+    minimal
+    maximum
+    maximal
+@[AggFunction]
+    percentage of
+    fraction of
+@[TBE]
+    to solve an incident due to virus
+    waiting for committee
+    to analyse a request
+    RFC under the analyses
+    an RFC
+    an order
+    cause by committees
+    users are waiting
+    in wait user state
+    that users are waiting
+@[GBI]
+    grouped by
+    grouped per
+    per
+@[GBC]
+    customer
+    contractor
+    type of change
+    project
+    application
+@[CMI]
+    number of
+    volume of
+    number of times
+@[CE]
+    users within the black list
+    users blocked for misusing email
+    incidents due to mailbox management
+    incidents related to the address book management
+    incidents related to the calendar
+    incidents related to the email management in general
+    received messages
+    managed messages
+    activities reopened
+    activities fixed
+    activities closed
+    activities opened
+    activities
+    activities closed before fixed
+    discarded connections due to black list (RBL)
+    messages with virus
+    messages tagged as spam
+    times the university of seville clocked a remote MX (mail exchange)
+    incidents happening with the distribution list
+    incidents due to virus
+    users blocked due to massive sending of emails
+    problems happened due to phishing
+    cancelled RFCs due to registry error
+    corrective changes
+    analysis requests
+    RFCs under analysis
+    RFCs
+    new incidents opened in a period of time
+    incidents solved in a period of time
+    incidents
+    without errors
+    activities that are not opened
+    activities that are not closed
+@[CCI]
+    greater than
+    =
+    !=
+    >
+    <
+    lower than
+    more than
+    greater than
+    bigger than
+    larger than
+    less than
+    equals to
+    smaller than
+    shorter than
+    is
+    not equals to
+    different than
+@[AttributeValue]
+    235
+    23.78
+    7
+    activity x
+    closed
+    opened
+    provider3
+    activity y
+    32
+    worker
+    send fine
+    6
+    45
+    42 
+@[FMI]
+    percentage of
+    %
+@[FNE]
+    problems sending emails
+    problems receiving emails
+    cancelled RFCs due to registry error
+    corrective RFCs
+    incidents that are not solved one week after they were registered
+    incidents that reopened because they were not correctly solved
+@[FDI]
+    with respect to
+    from
+    out of
+    over
+@[FDE]
+    the total number of problems due to sending or receiving emails
+    all registered RFCs
+    all approved RFCs
+    all activities
+    all activities opened
+    all activities fixed
+    all activities reopened
+    all activities closed

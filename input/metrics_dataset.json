@@ -1,0 +1,643 @@
+{
+	"datasets": {
+		"traffic": {
+			"url": "https://data.4tu.nl/ndownloader/files/24018146",
+			"file": "input/event_logs/Road_Traffic_Fine_Management_Process.xes"
+		},
+		"bpi2013": {
+			"url": "https://data.4tu.nl/ndownloader/files/24033593",
+			"file": "input/event_logs/bpi_challenge_2013_incidents.xes"
+		}
+	},
+	"metrics": [
+		{
+			"description": "Number of incidents that are not resolved",
+			"type": "count",
+			"dataset": [
+				"bpi2013",
+				"sas"
+			],
+			"goldstandard": {
+				"sas": {
+					"aggregation": "sum",
+					"count_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Resolve"
+					},
+					"condition": {
+						"operator": "equal",
+						"value": "0"
+					}
+				},
+				"bpi2013": {
+					"aggregation": "sum",
+					"count_condition": {
+						"attribute": "lifecycle:transition",
+						"operator": "==",
+						"value": "Resolved"
+					},
+					"condition": {
+						"operator": "equal",
+						"value": "0"
+					}
+				}
+			}
+		},
+		{
+			"description": "Average time from opened to closed",
+			"type": "time",
+			"dataset": "sas",
+			"goldstandard": {
+				"sas": {
+					"aggregation": "average",
+					"from_condition": {
+						"attribute": "STATE",
+						"operator": "==",
+						"value": "Opened"
+					},
+					"to_condition": {
+						"attribute": "STATE",
+						"operator": "==",
+						"value": "Closed"
+					}
+				}
+			}
+		},
+		{
+			"description": "Average real time from opening to resolution of the incident",
+			"dataset": "sas",
+			"type": "time",
+			"goldstandard": {
+				"sas": {
+					"aggregation": "average",
+					"from_condition": {
+						"attribute": "STATE",
+						"operator": "==",
+						"value": "Opened"
+					},
+					"to_condition": {
+						"attribute": "STATE",
+						"operator": "==",
+						"value": "Fixed"
+					}
+				}
+			}
+		},
+		{
+			"description": "Average number of priority changes",
+			"type": "count",
+			"dataset": "sas",
+			"goldstandard": {}
+		},
+		{
+			"description": "Average delays caused by appealing to prefacture",
+			"type": "time",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"aggregation": "average",
+					"from_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Send Appeal to Prefecture"
+					},
+					"to_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Receive Result Appeal from Prefecture"
+					}
+				}
+			}
+		},
+		{
+			"description": "Average number of fines that finish without payment",
+			"type": "count",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"aggregation": "average",
+					"count_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Payment"
+					},
+					"condition": {
+						"operator": "equal",
+						"value": "0"
+					}
+				}
+			}
+		},
+		{
+			"description": "Average number of payments collected in a month",
+			"type": "count",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"aggregation": "average",
+					"count_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Payment"
+					},
+					"period": {
+						"type": "time",
+						"window": "month"
+					}
+				}
+			}
+		},
+		{
+			"description": "Percentage of fines that are paid before notification",
+			"type": "count",
+			"dataset": "traffic",
+			"goldstandard": {}
+		},
+		{
+			"description": "Average time between fine creation and notification",
+			"type": "time",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"aggregation": "average",
+					"from_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Create Fine"
+					},
+					"to_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Insert fine notification"
+					}
+				}
+			}
+		},
+		{
+			"description": "Number of fines that are appealed to judge",
+			"type": "count",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"aggregation": "sum",
+					"count_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Appeal to judge"
+					}
+				}
+			}
+		},
+		{
+			"description": "Percentage of fines with penalties for the offender out of all fines created",
+			"type": "count",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"aggregation": "percentage",
+					"count_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Add penalty"
+					}
+				}
+			}
+		},
+		{
+			"description": "Maximum time from fine creation to notification",
+			"type": "time",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"aggregation": "maximum",
+					"from_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Create Fine"
+					},
+					"to_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Insert fine notification"
+					}
+				}
+			}
+		},
+		{
+			"description": "Percentage of fines that are not dismissed",
+			"type": "count",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"aggregation": "percentage",
+					"count_condition": {
+						"attribute": "dismissal",
+						"operator": "==",
+						"value": "nan"
+					}
+				}
+			}
+		},
+		{
+			"description": "Average time until a fine is paid",
+			"type": "time",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"aggregation": "average",
+					"from_condition": {
+						"case": "begin"
+					},
+					"to_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Payment"
+					}
+				}
+			}
+		},
+		{
+			"description": "The fraction of fines that are appealed to a judge",
+			"type": "count",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"aggregation": "percentage",
+					"count_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Appeal to judge"
+					},
+					"condition": {
+						"operator": "gt",
+						"value": "0"
+					}
+				}
+			}
+		},
+		{
+			"description": "Number of fines with amounts above 100 euros",
+			"type": "data",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"aggregation": "number",
+					"data_condition": {
+						"attribute": "paymentAmount"
+					},
+					"condition": {
+						"operator": "gt",
+						"value": "100"
+					}
+				}
+			}
+		},
+		{
+			"description": "Fraction of appealed cases that are dismissed",
+			"type": "count",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"aggregation": "percentage",
+					"count_condition": {
+						"attribute": "dismissal",
+						"operator": "==",
+						"value": "nan"
+					},
+					"filter": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Appeal to judge"
+					}
+				}
+			}
+		},
+		{
+			"description": "Maximum time to resolve an incident",
+			"type": "time",
+			"dataset": [
+				"bpi2013",
+				"sas"
+			],
+			"goldstandard": {
+				"sas": {
+					"aggregation": "maximum",
+					"from_condition": {
+						"case": "begin"
+					},
+					"to_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Resolve"
+					}
+				},
+				"bpi2013": {
+					"aggregation": "maximum",
+					"from_condition": {
+						"case": "begin"
+					},
+					"to_condition": {
+						"attribute": "lifecycle:transition",
+						"operator": "==",
+						"value": "Resolved"
+					}
+				}
+			}
+		},
+		{
+			"description": "Percentage of incidents with major impact from all incidents",
+			"type": "data",
+			"dataset": [
+				"bpi2013"
+			],
+			"goldstandard": {
+				"bpi2013": {
+					"aggregation": "percentage",
+					"data_condition": {
+						"attribute": "impact"
+					},
+					"condition": {
+						"operator": "equal",
+						"value": "Major"
+					}
+				}
+			}
+		},
+		{
+			"description": "Percentage of incidents that require the third line",
+			"type": "fraction",
+			"dataset": [
+				"bpi2013"
+			],
+			"goldstandard": {}
+		},
+		{
+			"description": "Number of incidents grouped by priority",
+			"type": "count",
+			"dataset": [
+				"bpi2013",
+				"sas"
+			],
+			"goldstandard": {
+				"sas": {
+					"aggregation": "sum",
+					"count_condition": {
+						"attribute": "TYPOLOGY",
+						"operator": "==",
+						"value": "Incident"
+					},
+					"groupby_attribute": {
+						"attribute": "PRIORITY"
+					}
+				},
+				"bpi2013": {
+					"aggregation": "sum",
+					"count_condition": {
+						"case": "begin"
+					},
+					"groupby_attribute": {
+						"attribute": "impact"
+					}
+				}
+			}
+		},
+		{
+			"description": "Percentage of time spent in wait user state",
+			"type": "time",
+			"dataset": [
+				"bpi2013",
+				"sas"
+			],
+			"goldstandard": {
+				"sas": {
+					"aggregation": "percentage",
+					"from_condition": {
+						"attribute": "STATE",
+						"operator": "==",
+						"value": "Delayed"
+					},
+					"to_condition": {
+						"attribute": "STATE",
+						"operator": "!=",
+						"value": "Delayed"
+					}
+				},
+				"bpi2013": {
+					"aggregation": "percentage",
+					"from_condition": {
+						"attribute": "lifecycle:transition",
+						"operator": "==",
+						"value": "Wait - User"
+					},
+					"to_condition": {
+						"attribute": "lifecycle:transition",
+						"operator": "!=",
+						"value": "Wait - User"
+					}
+				}
+			}
+		},
+		{
+			"description": "Percentage of cases that are pushed to the 2nd line",
+			"type": "fraction",
+			"dataset": [
+				"bpi2013"
+			],
+			"goldstandard": {}
+		},
+		{
+			"description": "Average time to resolve the incident grouped by impact",
+			"type": "time",
+			"dataset": [
+				"bpi2013",
+				"sas"
+			],
+			"goldstandard": {
+				"sas": {
+					"aggregation": "average",
+					"from_condition": {
+						"case": "begin"
+					},
+					"to_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Resolve"
+					},
+					"groupby_attribute": {
+						"attribute": "PRIORITY"
+					}
+				},
+				"bpi2013": {
+					"aggregation": "average",
+					"from_condition": {
+						"case": "begin"
+					},
+					"to_condition": {
+						"attribute": "lifecycle:transition",
+						"operator": "==",
+						"value": "Resolved"
+					},
+					"groupby_attribute": {
+						"attribute": "impact"
+					}
+				}
+			}
+		},
+		{
+			"description": "Total resolution time of an incident",
+			"type": "time",
+			"dataset": [
+				"bpi2013",
+				"sas"
+			],
+			"goldstandard": {
+				"sas": {
+					"aggregation": "sum",
+					"from_condition": {
+						"case": "begin"
+					},
+					"to_condition": {
+						"attribute": "STATE",
+						"operator": "==",
+						"value": "Fixed"
+					}
+				},
+				"bpi2013": {
+					"aggregation": "sum",
+					"from_condition": {
+						"case": "begin"
+					},
+					"to_condition": {
+						"attribute": "lifecycle:transition",
+						"operator": "==",
+						"value": "Resolved"
+					}
+				}
+			}
+		},
+		{
+			"description": "Number of incidents cancelled",
+			"type": "count",
+			"dataset": [
+				"bpi2013",
+				"sas"
+			],
+			"goldstandard": {
+				"sas": {
+					"aggregation": "sum",
+					"count_condition": {
+						"attribute": "STATE",
+						"operator": "==",
+						"value": "Cancelled"
+					}
+				},
+				"bpi2013": {
+					"aggregation": "sum",
+					"count_condition": {
+						"attribute": "lifecycle:transition",
+						"operator": "==",
+						"value": "Cancelled"
+					}
+				}
+			}
+		},
+		{
+			"description": "Fraction of cases that are pushed to the 2nd line",
+			"type": "fraction",
+			"dataset": [
+				"bpi2013"
+			],
+			"goldstandard": {}
+		},
+		{
+			"description": "Average time that users are waiting",
+			"type": "time",
+			"dataset": [
+				"bpi2013",
+				"sas"
+			],
+			"goldstandard": {
+				"sas": {
+					"aggregation": "average",
+					"from_condition": {
+						"attribute": "STATE",
+						"operator": "==",
+						"value": "Delayed"
+					},
+					"to_condition": {
+						"attribute": "STATE",
+						"operator": "!=",
+						"value": "Delayed"
+					}
+				},
+				"bpi2013": {
+					"aggregation": "average",
+					"from_condition": {
+						"attribute": "lifecycle:transition",
+						"operator": "==",
+						"value": "Wait - User"
+					},
+					"to_condition": {
+						"attribute": "lifecycle:transition",
+						"operator": "!=",
+						"value": "Wait - User"
+					}
+				}
+			}
+		},
+		{
+			"description": "Average time to resolve an incident",
+			"type": "time",
+			"dataset": [
+				"bpi2013",
+				"sas"
+			],
+			"goldstandard": {
+				"sas": {
+					"aggregation": "average",
+					"from_condition": {
+						"case": "begin"
+					},
+					"to_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Resolve"
+					}
+				},
+				"bpi2013": {
+					"aggregation": "average",
+					"from_condition": {
+						"case": "begin"
+					},
+					"to_condition": {
+						"attribute": "lifecycle:transition",
+						"operator": "==",
+						"value": "Resolved"
+					}
+				}
+			}
+		},
+		{
+			"description": "Fraction of incidents that are escalated",
+			"type": "count",
+			"dataset": [
+				"sas"
+			],
+			"goldstandard": {
+				"sas": {
+					"aggregation": "percentage",
+					"count_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Escalate"
+					},
+					"condition": {
+						"operator": "gt",
+						"value": "0"
+					}
+				}
+			}
+		}
+	]
+}

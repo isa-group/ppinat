@@ -1,0 +1,1 @@
+TAGS_LIST = ['O', 'B-AggFunction', 'I-AggFunction', 'B-TMI', 'I-TMI', 'B-TSE', 'I-TSE', 'B-TEE', 'I-TEE', 'B-CMI', 'I-CMI', 'B-CE', 'I-CE', 'B-GBI', 'I-GBI', 'B-GBC', 'I-GBC', 'B-CCI', 'I-CCI', 'B-AttributeValue', 'B-AttributeName', 'B-TBE', 'I-TBE', 'B-FDI', 'I-FDI', 'B-FDE', 'I-FDE', 'I-AttributeValue']

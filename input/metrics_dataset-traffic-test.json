@@ -1,0 +1,379 @@
+{
+	"datasets": {
+		"traffic": {
+			"url": "https://data.4tu.nl/ndownloader/files/24018146",
+			"file": "input/event_logs/Road_Traffic_Fine_Management_Process.xes"
+		}
+	},
+	"metrics": [
+		{
+			"description": "Time until the fine is sent",
+			"type": "time",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"type": "time",
+					"from_condition": {
+						"case": "begin"
+					},
+					"to_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Send Fine"
+					}
+				}
+			}
+		},
+		{
+			"description": "Time until sending to credit collection",
+			"type": "time",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"type": "time",
+					"from_condition": {
+						"case": "begin"
+					},
+					"to_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Send For Credit Collection"
+					}
+				}
+			}
+		},
+		{
+			"description": "Time from appeal to the police sending it to prefecture",
+			"type": "time",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"type": "time",
+					"from_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Insert Date Appeal to Prefecture"
+					},
+					"to_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Send Appeal to Prefecture"
+					}
+				}
+			}
+		},
+		{
+			"description": "time to the final payment",
+			"type": "time",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"type": "time",
+					"from_condition": {
+						"case": "begin"
+					},
+					"to_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Payment"
+					}
+				}
+			}
+		},
+		{
+			"description": "time from the result of the appeal to notification",
+			"type": "time",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"type": "time",
+					"from_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Receive Result Appeal from Prefecture"
+					},
+					"to_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Notify Result Appeal to Offender"
+					}
+				}
+			}
+		},
+		{
+			"description": "Percentage of fines with an increment",
+			"type": "count",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"type": "count",
+					"aggregation": "%",
+					"count_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Add Penalty"
+					}
+				}
+			}
+		},
+		{
+			"description": "Percentage of fines sent to credit collection",
+			"type": "count",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"type": "count",
+					"aggregation": "%",
+					"count_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Send For Credit Collection"
+					}
+				}
+			}
+		},
+		{
+			"description": "Time to notification since the offense date",
+			"type": "time",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"type": "time",
+					"from_condition": {
+						"case": "begin"
+					},
+					"to_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Insert Fine Notification"
+					}
+				}
+			}
+		},
+		{
+			"description": "ratio of cases handled over to credit collection",
+			"type": "count",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"type": "count",
+					"aggregation": "%",
+					"count_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Send For Credit Collection"
+					}
+				}
+			}
+		},
+		{
+			"description": "time to notify fine to offender",
+			"type": "time",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"type": "time",
+					"from_condition": {
+						"case": "begin"
+					},
+					"to_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Insert Fine Notification"
+					}
+				}
+			}
+		},
+		{
+			"description": "Number of payments",
+			"type": "count",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"type": "count",
+					"count_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Payment"
+					}
+				}
+			}
+		},
+		{
+			"description": "Number of payments in relation to notified fines",
+			"type": "count",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"type": "count",
+					"aggregation": "%",
+					"count_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Payment"
+					},
+					"filter": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Insert Fine Notification"
+					}
+				}
+			}
+		},
+		{
+			"description": "Average waiting time to the arrival of a notification",
+			"type": "time",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"type": "time",
+					"aggregation": "AVG",
+					"from_condition": {
+						"case": "begin"
+					},
+					"to_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Insert Fine Notification"
+					}
+				}
+			}
+		},
+		{
+			"description": "Percentage of fines with appeal",
+			"type": "count",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"type": "count",
+					"aggregation": "%",
+					"count_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Insert Date Appeal to Prefecture"
+					}
+				}
+			}
+		},
+		{
+			"description": "Percentage of fines with penalty",
+			"type": "count",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"type": "count",
+					"aggregation": "%",
+					"count_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Add Penalty"
+					}
+				}
+			}
+		},
+		{
+			"description": "average time it takes a person to pay a fine after the arrival of the notification",
+			"type": "time",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"type": "time",
+					"aggregation": "AVG",
+					"from_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Insert Fine Notification"
+					},
+					"to_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Payment"
+					}
+				}
+			}
+		},
+		{
+			"description": "average time it takes the prefecture to solve an appeal",
+			"type": "time",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"type": "time",
+					"aggregation": "AVG",
+					"from_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Send Appeal to Prefecture"
+					},
+					"to_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Receive Result Appeal from Prefecture"
+					}
+				}
+			}
+		},
+		{
+			"description": "Number of appeals registered",
+			"type": "count",
+			"dataset": "traffic",
+			"goldstandard": {}
+		},
+		{
+			"description": "Time of the prefecture",
+			"type": "time",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"type": "time",
+					"from_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Send Appeal to Prefecture"
+					},
+					"to_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Receive Result Appeal from Prefecture"
+					}
+				}
+			}
+		},
+		{
+			"description": "Occasions in Numbers how often the Credit collection is needed ",
+			"type": "count",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"type": "count",
+					"aggregation": "SUM",
+					"count_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Send For Credit Collection"
+					}
+				}
+			}
+		},
+		{
+			"description": "The time between the first penalty placed and the credit collection ",
+			"type": "time",
+			"dataset": "traffic",
+			"goldstandard": {
+				"traffic": {
+					"type": "time",
+					"from_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Add Penalty"
+					},
+					"to_condition": {
+						"attribute": "ACTIVITY",
+						"operator": "==",
+						"value": "Send For Credit Collection"
+					}
+				}
+			}
+		}
+	]
+}
