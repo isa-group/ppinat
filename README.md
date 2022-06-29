@@ -17,6 +17,8 @@ $ pip3 install -f requirements.txt
 
 Note that to execute ppinat you need at least a version of Python >= 3.6
 
+You also need to download the [pytorch pre-trained model for the parser](https://www.mediafire.com/file/phpx38n1ihc8lcg/pytorch_model.bin/file) (it is not included because of its size).  It should be included into the `ppinat/PPIBot model` folder. 
+
 
 ## Execution
 
@@ -27,6 +29,12 @@ $ python evaluation.py
 ```
 
 By default, it executes the PPIs that have been defined in the dataset for the Traffic Fines Management Process. You can find the details at [`input/metrics_dataset-traffic-test.json`](input/metrics_dataset-traffic-test.json). If the event log of the dataset is not available at `input/event_logs`, then it downloads it automatically. The output is a summary of the PPIs that have been correctly identified and those that haven't. It also generates two files with additional information: `results.csv` and `ppi-results.csv`.
+
+To execute a different dataset, you just need to include the path to the JSON file of the dataset as a parameter:
+
+```shell
+$ python evaluation.py input/metrics_dataset-domesticDeclarations.json
+```
 
 If you want to try with different weights for the features that are considered during matching, you can do so by editing `evaluation.py`. The weights can be easily configured by hand following the examples included there.
 
@@ -41,8 +49,7 @@ ppinat comes with three PPI datasets:
 
 ## Parser
 
-For fine-tuning the language model, we use the script included in `parser_training/transformer.ipynb` and the training phrases generation file `parser_training/phrases.chatito`. To generate the training dataset, you must use [Chatito](https://rodrigopivi.github.io/Chatito/).
+Step 1 is implemented by a parser that performs entity extraction by using a state-of-the-art procedure for token classification.
+This procedure works by fine-tuning a transformer language model with our set of defined entity classes, using a linear layer on top of the hidden-states output of the language model. For building this model, we use the script included in `parser_training/transformer.ipynb`.
 
-The trained model can also be downloaded from  [pytorch_model](https://www.mediafire.com/file/phpx38n1ihc8lcg/pytorch_model.bin/file). It should be included into the `ppinat/PPIBot model` folder. 
-
-
+A challenge here is that the technique we use requires a considerable amount of training data, especially when dealing with such diverse kinds of (potential) input and entities relevant to our work, which we address through data augmentation. To this end, we define textual patterns commonly found in PPI descriptions. The patterns were handcrafted based on the 165 PPIs from our training collection, making sure that a wide variety of different patterns was included for all measure types. The training phrases generation file with all the patterns is `parser_training/phrases.chatito`. Using these patterns, we use [Chatito](https://rodrigopivi.github.io/Chatito/), which is a natural language generator tool to generate distinct training phrases by combining all different alternatives provided for each pattern.
