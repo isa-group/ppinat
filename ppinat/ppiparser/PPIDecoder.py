@@ -3,10 +3,10 @@ import ppinat.ppiparser.Tags_list as Tags_list
 
 from .ppiannotation import PPIAnnotation
 
-
 class PPIDecoder:
-    def __init__(self, model, tokenizer):
+    def __init__(self, model, text_model, tokenizer):
         self.model = model
+        self.text_model = text_model
         self.tokenizer = tokenizer
 
     def predict_annotation(self, input_string) -> PPIAnnotation:
@@ -14,16 +14,18 @@ class PPIDecoder:
         words = input_string.split()
         tokens  = self.tokenizer(words, return_tensors='pt', truncation=True, is_split_into_words=True)
         
-        predictions = self.model(**tokens)["logits"].argmax(-1).tolist()[0][1:-1]
-        predictions_decoded = [Tags_list.TAGS_LIST[i] for i in predictions]
-        predictions_decoded_cleaned = self.clean_prediction_tags(predictions_decoded)
-
-        if "TMI" in predictions_decoded_cleaned:
+        metric_type = self.text_model(**tokens)["logits"].argmax(-1).tolist()[0]
+        if metric_type == 0:
             type = "time"
-        elif "CE" in predictions_decoded_cleaned:
+        elif metric_type == 1:
             type = "count"
         else:
             type = "data"
+
+        predictions = self.model[type](**tokens)["logits"].argmax(-1).tolist()[0][1:-1]
+
+        predictions_decoded = [Tags_list.TAGS_LIST[type][i] for i in predictions]
+        predictions_decoded_cleaned = self.clean_prediction_tags(predictions_decoded)
 
         chunks = self.generate_chunks(words, predictions_decoded_cleaned)
 

@@ -16,7 +16,7 @@ from ppinat.matcher.similarity import SimilarityComputer
 from ppinat.ppiparser.ppiannotation import PPIAnnotation, text_by_tag
 from ppinat.ppiparser.transformer import load_transformer
 from ppinot4py.model import AppliesTo, RuntimeState, TimeInstantCondition
-
+from ppinat.models.gcloud import update_models
 
 def aggregate_results(attribute_results):
     return {k: sum([attribute_results[att][k] for att in attribute_results]) for k in ['good', 'regular', 'bad']}
@@ -467,13 +467,17 @@ class InputTest:
                 #    columns_values[v].append(values[v])
 
     def similarity_charge(self, log):
-        MODEL = './ppinat/PPIBot model'
+        update_models()
         NLP = spacy.load('en_core_web_lg')
-        TRANSFORMER = load_transformer(MODEL)
+        TEXT_CLASSIFIER = './ppinat/models/TextClassification'
+        TIME_MODEL = './ppinat/models/TimeModel'
+        COUNT_MODEL = './ppinat/models/CountModel'
+        DATA_MODEL = './ppinat/models/DataModel'
+        ALL_TRANSFORMERS = load_transformer(TEXT_CLASSIFIER, TIME_MODEL, COUNT_MODEL, DATA_MODEL)
 
         LOG = load_log(log, id_case="ID", time_column="DATE",
                        activity_column="ACTIVITY")
-        SIMILARITY = SimilarityComputer(LOG, NLP, metric_decoder=TRANSFORMER, weights = self.weights)
+        SIMILARITY = SimilarityComputer(LOG, NLP, metric_decoder=ALL_TRANSFORMERS, weights = self.weights)
         return SIMILARITY
 
     def decompress(self, filename):

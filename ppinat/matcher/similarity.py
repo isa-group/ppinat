@@ -3,8 +3,8 @@ import logging
 from spacy.tokens import Doc 
 from statistics import mean
 from ppinat.ppiparser.ppiannotation import PPIAnnotation
-from ppinot4py.computers import condition_computer, measure_computer
-from ppinot4py.model import TimeInstantCondition, TimeMeasure
+from ppinot4py.computers import condition_computer
+from ppinot4py.model import TimeInstantCondition
 from ppinat.helpers import Log
 import numpy as np
 import re, math
@@ -12,9 +12,9 @@ from collections import Counter
 from fastDamerauLevenshtein import damerauLevenshtein
 from pyjarowinkler import distance as pyjarowinkler_d
 from sentence_transformers import SentenceTransformer, util
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
+import torch
 
-
-logger = logging.getLogger(__name__)
 
 class Slot():
     """
@@ -183,6 +183,9 @@ class SimilarityComputer:
         self.decoder = metric_decoder
         self.model = SentenceTransformer('all-MiniLM-L6-v2')
         #self.model = SentenceTransformer('all-MiniLM-L12-v2')
+        self.tokenizer = AutoTokenizer.from_pretrained('facebook/bart-large-mnli')
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.nli_model = AutoModelForSequenceClassification.from_pretrained('facebook/bart-large-mnli').to(self.device)
 
         self.slot_threshold = slot_threshold
         self.att_threshold = att_threshold
@@ -518,6 +521,16 @@ class SimilarityComputer:
         return (sim_text/idf_text + sim_slot/idf_slot)/2
 
 
+    def calculate_bart_large_mnli_personalized(self, premise, hypothesis):
+        x = self.tokenizer.encode(premise, hypothesis, return_tensors='pt', truncation='only_first')
+        logits = self.nli_model(x.to(self.device))[0]
+
+        entail_contradiction_logits = logits[:, [0, 2]]
+        probs = entail_contradiction_logits.softmax(dim=1)
+        prob_label_is_true = probs[:, 1]
+
+        return prob_label_is_true.item()
+
 
     def _compute_slot_similarity_features(self, event, slots):
         text_vector = self.nlp(event)
@@ -532,7 +545,7 @@ class SimilarityComputer:
         res = {}
 
         if self.two_step_match:
-            for att in slots.keys():
+            for att in list(slots.keys()):
                 similarity_slot = {}
                 cosine_scores = util.cos_sim(event_embedding, self.embeddings[att])
                 cosine_scores_ext = util.cos_sim(event_embedding, self.embeddings[att+"-attrib"])
@@ -557,6 +570,8 @@ class SimilarityComputer:
                     idf_slot_complete = [self.idf(term, att) for term in lemmas_slot_complete]
                     idf_text = [self.idf(term, att) for term in lemmas_text]
 
+                    hypothesis3 = f'The condition is: {slot.text_complete()}.'
+
                     similarity_slot[slot] = {
                         "slot_sim": slot_sim,
                         "slot_complete_sim": slot_complete_sim,
@@ -567,7 +582,8 @@ class SimilarityComputer:
                         "idf_text": sum(idf_text) / len(idf_text) if len(idf_text) > 0 else 1, 
                         "idf_slot": sum(idf_slot) / len(idf_slot) if len(idf_slot) > 0 else 1,
                         "idf_slot_complete": sum(idf_slot_complete) / len(idf_slot_complete),
-                        "single_slot": 1.0 if slot.column2 is None else 0.0
+                        "single_slot": 1.0 if slot.column2 is None else 0.0,
+                        "bart_large_mnli_personalized_complete": self.calculate_bart_large_mnli_personalized(event, hypothesis3),
                     }
 
                 if len(similarity_slot) > 0:
@@ -763,10 +779,10 @@ class SimilarityComputer:
         # similarities_cosine = self.cosine_distance(text, values_to_compare)
         similarities_damerauLevenshtein = self.damerauLevenshtein_distance(text, values_to_compare)
         similarities_pyjarowinkler = self.pyjarowinkler_distance(text, values_to_compare)
-        similarities = self.mean_similarities([similarities_framework, similarities_damerauLevenshtein, similarities_pyjarowinkler])
-        #similarities_fram = {key: value * 0.75 for key, value in similarities_framework.items()}
-        #similarities_pydam = {key: mean([value, similarities_pyjarowinkler[key]]) * 0.25 for key, value in similarities_damerauLevenshtein.items()}
-        #similarities = {key: value + similarities_pydam[key] for key, value in similarities_fram.items()}
+        #similarities = self.mean_similarities([similarities_framework, similarities_cosine, similarities_damerauLevenshtein, similarities_pyjarowinkler])
+        similarities_fram = {key: value * 0.75 for key, value in similarities_framework.items()}
+        similarities_pydam = {key: mean([value, similarities_pyjarowinkler[key]]) * 0.25 for key, value in similarities_damerauLevenshtein.items()}
+        similarities = {key: value + similarities_pydam[key] for key, value in similarities_fram.items()}
         return self._filter_best_similarity(similarities, delta_heuristics)
 
     def get_similarity(self, text1, text2):

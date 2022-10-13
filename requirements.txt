@@ -22,3 +22,5 @@ torchvision
 transformers
 sentence-transformers
 sqlalchemy
+tqdm
+google-cloud-storage
