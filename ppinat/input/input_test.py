@@ -14,7 +14,7 @@ from colorama import Fore
 from ppinat.helpers import load_log
 from ppinat.matcher.similarity import SimilarityComputer
 from ppinat.ppiparser.ppiannotation import PPIAnnotation, text_by_tag
-from ppinat.ppiparser.transformer import load_transformer
+from ppinat.ppiparser.transformer import load_transformer, load_general_transformer
 from ppinot4py.model import AppliesTo, RuntimeState, TimeInstantCondition
 from ppinat.models.gcloud import update_models
 
@@ -51,6 +51,18 @@ class InputTest:
                 "bad": 0,
                 "nothing": 0
             }
+
+            self.tagging_results = {
+                "good": 0,
+                "regular": 0,
+                "bad": 0
+            }
+
+            self.seleted_model = args.model
+            if self.seleted_model == 1:
+                print("Using general token classification model")
+            else:
+                print("Using specific token classification model")
 
             columns_values = []
 
@@ -98,6 +110,13 @@ class InputTest:
             print(Fore.YELLOW + "-------------GENERAL INFO-------------" + Fore.RESET)
             print("Threshold 'a': " + str(t.BaseMetric.threshold_a) +
                   "\n" + "Threshold 'b': " + str(t.BaseMetric.threshold_b))
+
+            print("Parsing results:")
+            print(Fore.GREEN + "Good: " + str(self.tagging_results["good"]) + Fore.RESET)
+            print(Fore.YELLOW + "Regular: " +
+                  str(self.tagging_results["regular"]) + Fore.RESET)
+            print(Fore.RED + "Bad: " + str(self.tagging_results["bad"]) + Fore.RESET)
+
             print("Metric results:")
             print(Fore.GREEN + "Good: " + str(self.ppi_results["good"]) + Fore.RESET)
             print(Fore.YELLOW + "Regular: " +
@@ -255,30 +274,60 @@ class InputTest:
 
     def analyse_metric(self, command, similarity, metric, dataset_name, args, columns_values):
         recognized_entity = r.RecognizedEntities(None, metric["description"])
-        command.match_entities(recognized_entity, similarity)
+        
+        try:
+            command.match_entities(recognized_entity, similarity)
+        except:
+            return
+
         annotation: PPIAnnotation = similarity.metric_decoder(recognized_entity.text)
 
-        print(Fore.BLUE + "Metric-----> " + metric["description"] + Fore.RESET)
+        print(Fore.BLUE + "Metric -----> " + metric["description"] + Fore.RESET)
 
         from_text = text_by_tag(annotation, "TSE")
         to_text = text_by_tag(annotation, "TEE")
         only_text = text_by_tag(annotation, "TBE")
-        print(f"From text: {from_text}")
-        print(f"To text: {to_text}")
-        print(f"Only text: {only_text}")
-#        elif metric["type"] == "count":
         when_text = text_by_tag(annotation, "CE")
-        print(f"When text: {when_text}")
- #   elif metric[""]
         data_attribute = text_by_tag(annotation, "AttributeName")
-        print(f"Data attribute: {data_attribute}")
+        group_text = text_by_tag(annotation, 'GBC')
+        denominator_text = text_by_tag(annotation, 'FDE')
+        aggregation_text = annotation.get_aggregation_function()
+        conditional_text = text_by_tag(annotation, 'CCI')
+        conditional_attr_text = text_by_tag(annotation, 'AttributeValue')
 
-        print(f"Group by text: {text_by_tag(annotation, 'GBC')}")
-        print(f"Denominator text: {text_by_tag(annotation, 'FDE')}")
-        print(f"Aggregation text: {annotation.get_aggregation_function()}")
-        print(f"Conditional text: {text_by_tag(annotation, 'CCI')}")
-        print(f"Conditional attribute text: {text_by_tag(annotation, 'AttributeValue')}")
+        tags = {
+            "TSE": from_text,
+            "TEE": to_text,
+            "TBE": only_text,
+            "CE": when_text,
+            "AttributeName": data_attribute,
+            "GBC": group_text,
+            "FDE": denominator_text,
+            "AGR": aggregation_text,
+            "CCI": conditional_text,
+            "AttributeValue": conditional_attr_text
+        }
 
+        good_tags = 0
+        bad_tags = 0
+        
+        for tag in metric["slots"].keys():
+            if metric["slots"][tag] == tags[tag]:
+                good_tags += 1
+            else:
+                bad_tags += 1
+                print(f"Correct slot for {tag} is '{metric['slots'][tag]}' but found '{tags[tag]}'")
+        
+        if good_tags == 0:
+            self.tagging_results["bad"] += 1
+            print(f"{Fore.RED}Bad tagged{Fore.RESET}")
+        elif good_tags >= 1 and bad_tags >= 1:
+            self.tagging_results["regular"] += 1
+            print(f"{Fore.YELLOW}{good_tags}/{good_tags + bad_tags} slots have been tagged well{Fore.RESET}")
+        else:
+            self.tagging_results["good"] += 1
+            print(f"{Fore.GREEN}All slots have been tagged well{Fore.RESET}")
+        
         result = None
         if("goldstandard" in metric and dataset_name in metric["goldstandard"]):
             goldstandard = metric["goldstandard"][dataset_name]
@@ -467,17 +516,23 @@ class InputTest:
                 #    columns_values[v].append(values[v])
 
     def similarity_charge(self, log):
-        update_models()
         NLP = spacy.load('en_core_web_lg')
-        TEXT_CLASSIFIER = './ppinat/models/TextClassification'
-        TIME_MODEL = './ppinat/models/TimeModel'
-        COUNT_MODEL = './ppinat/models/CountModel'
-        DATA_MODEL = './ppinat/models/DataModel'
-        ALL_TRANSFORMERS = load_transformer(TEXT_CLASSIFIER, TIME_MODEL, COUNT_MODEL, DATA_MODEL)
-
         LOG = load_log(log, id_case="ID", time_column="DATE",
-                       activity_column="ACTIVITY")
-        SIMILARITY = SimilarityComputer(LOG, NLP, metric_decoder=ALL_TRANSFORMERS, weights = self.weights)
+                    activity_column="ACTIVITY")
+
+        if self.seleted_model == 1:
+            TOKEN_CLASSIFIER = './ppinat/models/GeneralClassifier'
+            TRANSFORMER = load_general_transformer(TOKEN_CLASSIFIER)
+            
+        else:
+            update_models()
+            TEXT_CLASSIFIER = './ppinat/models/TextClassification'
+            TIME_MODEL = './ppinat/models/TimeModel'
+            COUNT_MODEL = './ppinat/models/CountModel'
+            DATA_MODEL = './ppinat/models/DataModel'
+            TRANSFORMER = load_transformer(TEXT_CLASSIFIER, TIME_MODEL, COUNT_MODEL, DATA_MODEL)
+
+        SIMILARITY = SimilarityComputer(LOG, NLP, metric_decoder=TRANSFORMER, weights = self.weights)
         return SIMILARITY
 
     def decompress(self, filename):

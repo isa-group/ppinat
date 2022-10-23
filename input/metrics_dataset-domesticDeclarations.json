@@ -1,571 +1,703 @@
 {
-	"datasets": {
-		"domesticDeclarations": {
-			"url": "https://data.4tu.nl/ndownloader/files/24031811",
-			"file": "input/event_logs/DomesticDeclarations.xes"
-		}
-	},
-	"metrics": [
-		{
-			"description": "average total time from request submission to payment",
-			"type": "time",
-			"dataset": "domesticDeclarations",
-			"goldstandard": {
-				"domesticDeclarations": {
-					"type": "time",
-					"aggregation": "AVG",
-					"from_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Declaration SUBMITTED by EMPLOYEE"
-					},
-					"to_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Payment Handled"
-					}
-				}
-			}
-		},
-		{
-			"description": "average total time for reimbursement of travel costs",
-			"type": "time",
-			"dataset": "domesticDeclarations",
-			"goldstandard": {
-				"domesticDeclarations": {
-					"type": "time",
-					"aggregation": "AVG",
-					"from_condition": {
-						"case": "begin"
-					},
-					"to_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Payment Handled"
-					}
-				}
-			}
-		},
-		{
-			"description": "elapsed time between payment declared by the worker on the approval process and final payment reimbursed by the company",
-			"type": "time",
-			"dataset": "domesticDeclarations",
-			"goldstandard": {
-				"domesticDeclarations": {
-					"type": "time",
-					"from_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Declaration SUBMITTED by EMPLOYEE"
-					},
-					"to_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Payment Handled"
-					}
-				}
-			}
-		},
-		{
-			"description": "Average of declared costs detailed per trip",
-			"type": "data",
-			"dataset": "domesticDeclarations",
-			"goldstandard": {
-				"domesticDeclarations": {
-					"type": "data",
-					"aggregation": "AVG",
-					"data_condition": {
-						"attribute": "Amount"
-					}
-				}
-			}
-		},
-		{
-			"description": "Total workflow rejections by approver",
-			"type": "count",
-			"dataset": "domesticDeclarations",
-			"goldstandard": {
-				"domesticDeclarations": {
-					"type": "count",
-					"aggregation": "SUM",
-					"count_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Declaration REJECTED by ADMINISTRATION"
-					}
-				}
-			}
-		},
-		{
-			"description": "Average percentage of rejections by approver",
-			"type": "count",
-			"dataset": "domesticDeclarations",
-			"goldstandard": {
-				"domesticDeclarations": {
-					"type": "count",
-					"aggregation": "%",
-					"count_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Declaration REJECTED by ADMINISTRATION"
-					},
-					"condition": {
-						"operator": "gt",
-						"value": "0"
-					}
-				}
-			}
-		},
-		{
-			"description": "Total workflow rejected by worker",
-			"type": "count",
-			"dataset": "domesticDeclarations",
-			"goldstandard": {
-				"domesticDeclarations": {
-					"type": "count",
-					"aggregation": "SUM",
-					"count_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Declaration REJECTED by EMPLOYEE"
-					}
-				}
-			}
-		},
-		{
-			"description": "Average percentage of rejected workflows by worker",
-			"type": "count",
-			"dataset": "domesticDeclarations",
-			"goldstandard": {
-				"domesticDeclarations": {
-				"type": "count",
-				"aggregation": "%",
-				"count_condition": {
-					"attribute": "ACTIVITY",
-					"operator": "==",
-					"value": "Declaration REJECTED by EMPLOYEE"
-				},
-				"condition": {
-					"operator": "gt",
-					"value": "0"
-				}
-			}
-			}
-		},
-		{
-			"description": "The decision about the approval must be taken at most after 48 hours of the submission of the declaration",
-			"type": "time",
-			"dataset": "domesticDeclarations",
-			"goldstandard": {
-				"domesticDeclarations": {
-					"type": "time",
-					"aggregation": "AVG",
-					"from_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Declaration SUBMITTED by EMPLOYEE"
-					},
-					"to_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Declaration APPROVED by ADMINISTRATION"
-					},
-					"condition": {
-						"operator": "lt",
-						"value": "48"
-					}
-				}
-			}
-		},
-		{
-			"description": "The director should approve at most the 5% of the requests",
-			"type": "count",
-			"dataset": "domesticDeclarations",
-			"goldstandard": {
-				"domesticDeclarations": {
-					"type": "count",
-					"aggregation": "%",
-					"count_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Declaration FINAL_APPROVED by SUPERVISOR"
-					},
-					"condition": {
-						"operator": "lt",
-						"value": "5"
-					}
-				}
-			}
-		},
-		{
-			"description": "at most the 10% of the submitted declarations should be rejected",
-			"type": "count",
-			"dataset": "domesticDeclarations",
-			"goldstandard": {
-				"domesticDeclarations": {
-					"type": "count",
-					"aggregation": "%",
-					"count_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Declaration REJECTED by ADMINISTRATION"
-					},
-					"condition": {
-						"operator": "lt",
-						"value": "10"
-					}
-				}
-			}
-		},
-		{
-			"description": "Percentage of approved reimbursement requests",
-			"type": "count",
-			"dataset": "domesticDeclarations",
-			"goldstandard": {
-				"domesticDeclarations": {
-					"type": "count",
-					"aggregation": "%",
-					"count_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Declaration FINAL_APPROVED by SUPERVISOR"
-					},
-					"condition": {
-						"operator": "gt",
-						"value": "0"
-					}
-				}
-			}
-		},
-		{
-			"description": "Average time for processing reimbursement requests",
-			"type": "time",
-			"dataset": "domesticDeclarations",
-			"goldstandard": {
-				"domesticDeclarations": {
-					"type": "time",
-					"aggregation": "AVG",
-					"from_condition": {
-						"case": "begin"
-					},
-					"to_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Payment Handled"
-					}
-				}
-			}
-		},
-		{
-			"description": "The ratio of reimbursements rejected by employees",
-			"type": "count",
-			"dataset": "domesticDeclarations",
-			"goldstandard": {
-				"domesticDeclarations": {
-					"type": "count",
-					"aggregation": "%",
-					"count_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Declaration REJECTED by EMPLOYEE"
-					},
-					"condition": {
-						"operator": "gt",
-						"value": "0"
-					}
-				}
-			}
-		},
-		{
-			"description": "Average number of rejected submissions",
-			"type": "count",
-			"dataset": "domesticDeclarations",
-			"goldstandard": {
-				"domesticDeclarations": {
-					"type": "count",
-					"aggregation": "AVG",
-					"count_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Declaration REJECTED by ADMINISTRATION"
-					}
-				}
-			}
-		},
-		{
-			"description": "Average time to receive the reimbursement",
-			"type": "time",
-			"dataset": "domesticDeclarations",
-			"goldstandard": {
-				"domesticDeclarations": {
-					"type": "time",
-					"aggregation": "AVG",
-					"from_condition": {
-						"case": "begin"
-					},
-					"to_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Payment Handled"
-					}
-				}
-			}
-		},
-		{
-			"description": "Number of submissions",
-			"type": "count",
-			"dataset": "domesticDeclarations",
-			"goldstandard": {
-				"domesticDeclarations": {
-					"type": "count",
-					"aggregation": "SUM",
-					"count_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Declaration SUBMITTED by EMPLOYEE"
-					}
-				}
-			}
-		},
-		{
-			"description": "Average delay caused by the approval of the budget owner",
-			"type": "time",
-			"dataset": "domesticDeclarations",
-			"goldstandard": {
-				"domesticDeclarations": {
-					"type": "time",
-					"aggregation": "AVG",
-					"from_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Declaration APPROVED by ADMINISTRATION"
-					},
-					"to_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Declaration APPROVED by BUDGET OWNER"
-					}
-				}
-			}
-		},
-		{
-			"description": "Number of times the director's approval is needed",
-			"type": "count",
-			"dataset": "domesticDeclarations",
-			"goldstandard": {
-				"domesticDeclarations": {
-					"type": "count",
-					"aggregation": "SUM",
-					"count_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Declaration FINAL_APPROVED by SUPERVISOR"
-					}
-				}
-			}
-		},
-		{
-			"description": "Percentage of approved requests for reimbursement of travel costs",
-			"type": "count",
-			"dataset": "domesticDeclarations",
-			"goldstandard": {
-				"domesticDeclarations": {
-					"type": "count",
-					"aggregation": "%",
-					"count_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Declaration FINAL_APPROVED by SUPERVISOR"
-					},
-					"condition": {
-						"operator": "gt",
-						"value": "0"
-					}
-				}
-			}
-		},
-		{
-			"description": "Average time to approve the request for reimbursement",
-			"type": "time",
-			"dataset": "domesticDeclarations",
-			"goldstandard": {
-				"domesticDeclarations": {
-					"type": "time",
-					"aggregation": "AVG",
-					"from_condition": {
-						"case": "begin"
-					},
-					"to_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Declaration FINAL_APPROVED by SUPERVISOR"
-					}
-				}
-			}
-		},
-		{
-			"description": "The duration of the process",
-			"type": "time",
-			"dataset": "domesticDeclarations",
-			"goldstandard": {
-				"domesticDeclarations": {
-					"type": "time",
-					"aggregation": "AVG",
-					"from_condition": {
-						"case": "begin"
-					},
-					"to_condition": {
-						"case": "end"
-					}
-				}
-			}
-		},
-		{
-			"description": "The ratio of reimbursement requests that are not eventually paid",
-			"type": "count",
-			"dataset": "domesticDeclarations",
-			"goldstandard": {
-				"domesticDeclarations": {
-					"type": "count",
-					"aggregation": "%",
-					"count_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Payment Handled"
-					},
-					"condition": {
-						"operator": "equal",
-						"value": "0"
-					}
-				}
-			}
-		},
-		{
-			"description": "Percentage of rejected requests for reimbursement",
-			"type": "count",
-			"dataset": "domesticDeclarations",
-			"goldstandard": {
-				"domesticDeclarations": {
-					"type": "count",
-					"aggregation": "%",
-					"count_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Declaration REJECTED by ADMINISTRATION"
-					},
-					"condition": {
-						"operator": "gt",
-						"value": "0"
-					}
-				}
-			}
-		},
-		{
-			"description": "Average time since the employee submits the declaration and the payment is received",
-			"type": "time",
-			"dataset": "domesticDeclarations",
-			"goldstandard": {
-				"domesticDeclarations": {
-					"type": "time",
-					"aggregation": "AVG",
-					"from_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Declaration SUBMITTED by EMPLOYEE"
-					},
-					"to_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Payment Handled"
-					}
-				}
-			}
-		},
-		{
-			"description": "Percentage of declarations are approved",
-			"type": "count",
-			"dataset": "domesticDeclarations",
-			"goldstandard": {
-				"domesticDeclarations": {
-					"type": "count",
-					"aggregation": "%",
-					"count_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Declaration FINAL_APPROVED by SUPERVISOR"
-					}
-				}
-			}
-		},
-		{
-			"description": "Average costs per travel",
-			"type": "data",
-			"dataset": "domesticDeclarations",
-			"goldstandard": {
-				"domesticDeclarations": {
-					"type": "data",
-					"aggregation": "AVG",
-					"data_condition": {
-						"attribute": "Amount"
-					}
-				}
-			}
-		},
-		{
-			"description": "The number of reimbursements made per year",
-			"type": "count",
-			"dataset": "domesticDeclarations",
-			"goldstandard": {
-				"domesticDeclarations": {
-					"type": "count",
-					"aggregation": "SUM",
-					"count_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Payment Handled"
-					}
-				}
-			}
-		},
-		{
-			"description": "Time from submitting the declaration till the approval",
-			"type": "time",
-			"dataset": "domesticDeclarations",
-			"goldstandard": {
-				"domesticDeclarations": {
-					"type": "time",
-					"from_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Declaration SUBMITTED by EMPLOYEE"
-					},
-					"to_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Declaration FINAL_APPROVED by SUPERVISOR"
-					}
-				}
-			}
-		},
-		{
-			"description": "Percentage of disapproved declarations",
-			"type": "count",
-			"dataset": "domesticDeclarations",
-			"goldstandard": {
-				"domesticDeclarations": {
-					"type": "count",
-					"aggregation": "%",
-					"count_condition": {
-						"attribute": "ACTIVITY",
-						"operator": "==",
-						"value": "Declaration REJECTED by ADMINISTRATION"
-					},
-					"condition": {
-						"operator": "gt",
-						"value": "0"
-					}
-				}
-			}
-		}
-	]
+  "datasets": {
+    "domesticDeclarations": {
+      "url": "https://data.4tu.nl/ndownloader/files/24031811",
+      "file": "input/event_logs/DomesticDeclarations.xes"
+    }
+  },
+  "metrics": [
+    {
+      "description": "average total time from request submission to payment",
+      "type": "time",
+      "dataset": "domesticDeclarations",
+      "slots": {
+        "AGR": "average total",
+        "TSE": "request submission",
+        "TEE": "payment"
+      },
+      "goldstandard": {
+        "domesticDeclarations": {
+          "type": "time",
+          "aggregation": "AVG",
+          "from_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Declaration SUBMITTED by EMPLOYEE"
+          },
+          "to_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Payment Handled"
+          }
+        }
+      }
+    },
+    {
+      "description": "average total time for reimbursement of travel costs",
+      "type": "time",
+      "dataset": "domesticDeclarations",
+      "slots": {
+        "AGR": "average total",
+        "TBE": "for reimbursement of travel costs"
+      },
+      "goldstandard": {
+        "domesticDeclarations": {
+          "type": "time",
+          "aggregation": "AVG",
+          "from_condition": {
+            "case": "begin"
+          },
+          "to_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Payment Handled"
+          }
+        }
+      }
+    },
+    {
+      "description": "elapsed time between payment declared by the worker on the approval process and final payment reimbursed by the company",
+      "type": "time",
+      "dataset": "domesticDeclarations",
+      "slots": {
+        "TSE": "payment declared by the worker on the approval process",
+        "TEE": "final payment reimbursed by the company"
+      },
+      "goldstandard": {
+        "domesticDeclarations": {
+          "type": "time",
+          "from_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Declaration SUBMITTED by EMPLOYEE"
+          },
+          "to_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Payment Handled"
+          }
+        }
+      }
+    },
+    {
+      "description": "Average of declared costs detailed per trip",
+      "type": "data",
+      "dataset": "domesticDeclarations",
+      "slots": {
+        "AGR": "Average",
+        "AttributeValue": "declared",
+        "GBC": "trip"
+      },
+      "goldstandard": {
+        "domesticDeclarations": {
+          "type": "data",
+          "aggregation": "AVG",
+          "data_condition": {
+            "attribute": "Amount"
+          }
+        }
+      }
+    },
+    {
+      "description": "Total workflow rejections by approver",
+      "type": "count",
+      "dataset": "domesticDeclarations",
+      "slots": {
+        "AGR": "Total",
+        "CE": "workflow rejections by approver"
+      },
+      "goldstandard": {
+        "domesticDeclarations": {
+          "type": "count",
+          "aggregation": "SUM",
+          "count_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Declaration REJECTED by ADMINISTRATION"
+          }
+        }
+      }
+    },
+    {
+      "description": "Average percentage of rejections by approver",
+      "type": "count",
+      "dataset": "domesticDeclarations",
+      "slots": {
+        "AGR": "Average percentage of",
+        "CE": "rejections by approver"
+      },
+      "goldstandard": {
+        "domesticDeclarations": {
+          "type": "count",
+          "aggregation": "%",
+          "count_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Declaration REJECTED by ADMINISTRATION"
+          },
+          "condition": {
+            "operator": "gt",
+            "value": "0"
+          }
+        }
+      }
+    },
+    {
+      "description": "Total workflow rejected by worker",
+      "type": "count",
+      "dataset": "domesticDeclarations",
+      "slots": {
+        "AGR": "Total",
+        "CE": "workflow rejected by worker"
+      },
+      "goldstandard": {
+        "domesticDeclarations": {
+          "type": "count",
+          "aggregation": "SUM",
+          "count_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Declaration REJECTED by EMPLOYEE"
+          }
+        }
+      }
+    },
+    {
+      "description": "Average percentage of rejected workflows by worker",
+      "type": "count",
+      "dataset": "domesticDeclarations",
+      "slots": {
+        "AGR": "Average percentage of",
+        "CE": "rejected workflows by worker"
+      },
+      "goldstandard": {
+        "domesticDeclarations": {
+          "type": "count",
+          "aggregation": "%",
+          "count_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Declaration REJECTED by EMPLOYEE"
+          },
+          "condition": {
+            "operator": "gt",
+            "value": "0"
+          }
+        }
+      }
+    },
+    {
+      "description": "The decision about the approval must be taken at most after 48 hours of the submission of the declaration",
+      "type": "time",
+      "dataset": "domesticDeclarations",
+      "slots": {
+        "TEE": "The decision about the approval",
+        "TSE": "of the submission of the declaration",
+        "CCI": "at most after",
+        "AttributeValue": "48"
+      },
+      "goldstandard": {
+        "domesticDeclarations": {
+          "type": "time",
+          "aggregation": "AVG",
+          "from_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Declaration SUBMITTED by EMPLOYEE"
+          },
+          "to_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Declaration APPROVED by ADMINISTRATION"
+          },
+          "condition": {
+            "operator": "lt",
+            "value": "48"
+          }
+        }
+      }
+    },
+    {
+      "description": "The director should approve at most the 5% of the requests",
+      "type": "count",
+      "dataset": "domesticDeclarations",
+      "slots": {
+        "CE": "The director should approve",
+        "CCI": "at most the",
+        "AttributeValue": "5",
+        "AGR": "%",
+        "FDE": "the requests"
+      },
+      "goldstandard": {
+        "domesticDeclarations": {
+          "type": "count",
+          "aggregation": "%",
+          "count_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Declaration FINAL_APPROVED by SUPERVISOR"
+          },
+          "condition": {
+            "operator": "lt",
+            "value": "5"
+          }
+        }
+      }
+    },
+    {
+      "description": "at most the 10% of the submitted declarations should be rejected",
+      "type": "count",
+      "dataset": "domesticDeclarations",
+      "slots": {
+        "CCI": "at most the",
+        "AttributeValue": "10",
+        "AGR": "%",
+        "FDE": "the submitted declarations",
+        "CE": "rejected"
+      },
+      "goldstandard": {
+        "domesticDeclarations": {
+          "type": "count",
+          "aggregation": "%",
+          "count_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Declaration REJECTED by ADMINISTRATION"
+          },
+          "condition": {
+            "operator": "lt",
+            "value": "10"
+          }
+        }
+      }
+    },
+    {
+      "description": "Percentage of approved reimbursement requests",
+      "type": "count",
+      "dataset": "domesticDeclarations",
+      "slots": {
+        "AGR": "Percentage of",
+        "CE": "approved reimbursement requests"
+      },
+      "goldstandard": {
+        "domesticDeclarations": {
+          "type": "count",
+          "aggregation": "%",
+          "count_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Declaration FINAL_APPROVED by SUPERVISOR"
+          },
+          "condition": {
+            "operator": "gt",
+            "value": "0"
+          }
+        }
+      }
+    },
+    {
+      "description": "Average time for processing reimbursement requests",
+      "type": "time",
+      "dataset": "domesticDeclarations",
+      "slots": {
+        "AGR": "Average",
+        "TBE": "processing reimbursement requests"
+      },
+      "goldstandard": {
+        "domesticDeclarations": {
+          "type": "time",
+          "aggregation": "AVG",
+          "from_condition": {
+            "case": "begin"
+          },
+          "to_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Payment Handled"
+          }
+        }
+      }
+    },
+    {
+      "description": "The ratio of reimbursements rejected by employees",
+      "type": "count",
+      "dataset": "domesticDeclarations",
+      "slots": {
+        "AGR": "ratio of",
+        "CE": "reimbursements rejected by employees"
+      },
+      "goldstandard": {
+        "domesticDeclarations": {
+          "type": "count",
+          "aggregation": "%",
+          "count_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Declaration REJECTED by EMPLOYEE"
+          },
+          "condition": {
+            "operator": "gt",
+            "value": "0"
+          }
+        }
+      }
+    },
+    {
+      "description": "Average number of rejected submissions",
+      "type": "count",
+      "dataset": "domesticDeclarations",
+      "slots": {
+        "AGR": "Average",
+        "CE": "rejected submissions"
+      },
+      "goldstandard": {
+        "domesticDeclarations": {
+          "type": "count",
+          "aggregation": "AVG",
+          "count_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Declaration REJECTED by ADMINISTRATION"
+          }
+        }
+      }
+    },
+    {
+      "description": "Average time to receive the reimbursement",
+      "type": "time",
+      "dataset": "domesticDeclarations",
+      "slots": {
+        "AGR": "Average",
+        "TBE": "receive the reimbursement"
+      },
+      "goldstandard": {
+        "domesticDeclarations": {
+          "type": "time",
+          "aggregation": "AVG",
+          "from_condition": {
+            "case": "begin"
+          },
+          "to_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Payment Handled"
+          }
+        }
+      }
+    },
+    {
+      "description": "Number of submissions",
+      "type": "count",
+      "dataset": "domesticDeclarations",
+      "slots": {
+        "CE": "submissions"
+      },
+      "goldstandard": {
+        "domesticDeclarations": {
+          "type": "count",
+          "aggregation": "SUM",
+          "count_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Declaration SUBMITTED by EMPLOYEE"
+          }
+        }
+      }
+    },
+    {
+      "description": "Average delay caused by the approval of the budget owner",
+      "type": "time",
+      "dataset": "domesticDeclarations",
+      "slots": {
+        "AGR": "Average",
+        "TEE": "the approval of the budget owner"
+      },
+      "goldstandard": {
+        "domesticDeclarations": {
+          "type": "time",
+          "aggregation": "AVG",
+          "from_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Declaration APPROVED by ADMINISTRATION"
+          },
+          "to_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Declaration APPROVED by BUDGET OWNER"
+          }
+        }
+      }
+    },
+    {
+      "description": "Number of times the director's approval is needed",
+      "type": "count",
+      "dataset": "domesticDeclarations",
+      "slots": {
+        "AGR": "Number of times",
+        "CE": "the director's approval is needed"
+      },
+      "goldstandard": {
+        "domesticDeclarations": {
+          "type": "count",
+          "aggregation": "SUM",
+          "count_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Declaration FINAL_APPROVED by SUPERVISOR"
+          }
+        }
+      }
+    },
+    {
+      "description": "Percentage of approved requests for reimbursement of travel costs",
+      "type": "count",
+      "dataset": "domesticDeclarations",
+      "slots": {
+        "AGR": "Percentage of",
+        "CE": "approved requests for reimbursement of travel costs"
+      },
+      "goldstandard": {
+        "domesticDeclarations": {
+          "type": "count",
+          "aggregation": "%",
+          "count_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Declaration FINAL_APPROVED by SUPERVISOR"
+          },
+          "condition": {
+            "operator": "gt",
+            "value": "0"
+          }
+        }
+      }
+    },
+    {
+      "description": "Average time to approve the request for reimbursement",
+      "type": "time",
+      "dataset": "domesticDeclarations",
+      "slots": {
+        "AGR": "Average",
+        "TBE": "approve the request for reimbursement"
+      },
+      "goldstandard": {
+        "domesticDeclarations": {
+          "type": "time",
+          "aggregation": "AVG",
+          "from_condition": {
+            "case": "begin"
+          },
+          "to_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Declaration FINAL_APPROVED by SUPERVISOR"
+          }
+        }
+      }
+    },
+    {
+      "description": "The duration of the process",
+      "type": "time",
+      "dataset": "domesticDeclarations",
+      "slots": {
+        "TBE": "process"
+      },
+      "goldstandard": {
+        "domesticDeclarations": {
+          "type": "time",
+          "aggregation": "AVG",
+          "from_condition": {
+            "case": "begin"
+          },
+          "to_condition": {
+            "case": "end"
+          }
+        }
+      }
+    },
+    {
+      "description": "The ratio of reimbursement requests that are not eventually paid",
+      "type": "count",
+      "dataset": "domesticDeclarations",
+      "slots": {
+        "AGR": "ratio of",
+        "CE": "not eventually paid",
+        "FDE": "reimbursement requests"
+      },
+      "goldstandard": {
+        "domesticDeclarations": {
+          "type": "count",
+          "aggregation": "%",
+          "count_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Payment Handled"
+          },
+          "condition": {
+            "operator": "equal",
+            "value": "0"
+          }
+        }
+      }
+    },
+    {
+      "description": "Percentage of rejected requests for reimbursement",
+      "type": "count",
+      "dataset": "domesticDeclarations",
+      "slots": {
+        "AGR": "Percentage of",
+        "CE": "rejected requests",
+        "FDE": "reimbursement"
+      },
+      "goldstandard": {
+        "domesticDeclarations": {
+          "type": "count",
+          "aggregation": "%",
+          "count_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Declaration REJECTED by ADMINISTRATION"
+          },
+          "condition": {
+            "operator": "gt",
+            "value": "0"
+          }
+        }
+      }
+    },
+    {
+      "description": "Average time since the employee submits the declaration and the payment is received",
+      "type": "time",
+      "dataset": "domesticDeclarations",
+      "slots": {
+        "AGR": "Average",
+        "TSE": "the employee submits the declaration",
+        "TEE": "the payment is received"
+      },
+      "goldstandard": {
+        "domesticDeclarations": {
+          "type": "time",
+          "aggregation": "AVG",
+          "from_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Declaration SUBMITTED by EMPLOYEE"
+          },
+          "to_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Payment Handled"
+          }
+        }
+      }
+    },
+    {
+      "description": "Percentage of declarations are approved",
+      "type": "count",
+      "dataset": "domesticDeclarations",
+      "slots": {
+        "AGR": "Percentage of",
+        "CE": "declarations are approved"
+      },
+      "goldstandard": {
+        "domesticDeclarations": {
+          "type": "count",
+          "aggregation": "%",
+          "count_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Declaration FINAL_APPROVED by SUPERVISOR"
+          }
+        }
+      }
+    },
+    {
+      "description": "Average costs per travel",
+      "type": "data",
+      "dataset": "domesticDeclarations",
+      "slots": {
+        "AGR": "Average",
+        "AttributeName": "costs",
+        "GBC": "travel"
+      },
+      "goldstandard": {
+        "domesticDeclarations": {
+          "type": "data",
+          "aggregation": "AVG",
+          "data_condition": {
+            "attribute": "Amount"
+          }
+        }
+      }
+    },
+    {
+      "description": "The number of reimbursements made per year",
+      "type": "count",
+      "dataset": "domesticDeclarations",
+      "slots": {
+        "CE": "reimbursements made",
+        "GBC": "year"
+      },
+      "goldstandard": {
+        "domesticDeclarations": {
+          "type": "count",
+          "aggregation": "SUM",
+          "count_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Payment Handled"
+          }
+        }
+      }
+    },
+    {
+      "description": "Time from submitting the declaration till the approval",
+      "type": "time",
+      "dataset": "domesticDeclarations",
+      "slots": {
+        "TSE": "submitting the declaration",
+        "TEE": "approval"
+      },
+      "goldstandard": {
+        "domesticDeclarations": {
+          "type": "time",
+          "from_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Declaration SUBMITTED by EMPLOYEE"
+          },
+          "to_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Declaration FINAL_APPROVED by SUPERVISOR"
+          }
+        }
+      }
+    },
+    {
+      "description": "Percentage of disapproved declarations",
+      "type": "count",
+      "dataset": "domesticDeclarations",
+      "slots": {
+        "AGR": "Percentage of",
+        "CE": "disapproved declarations"
+      },
+      "goldstandard": {
+        "domesticDeclarations": {
+          "type": "count",
+          "aggregation": "%",
+          "count_condition": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Declaration REJECTED by ADMINISTRATION"
+          },
+          "condition": {
+            "operator": "gt",
+            "value": "0"
+          }
+        }
+      }
+    }
+  ]
 }

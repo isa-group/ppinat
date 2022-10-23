@@ -4,7 +4,7 @@ import ppinat.ppiparser.Tags_list as Tags_list
 from .ppiannotation import PPIAnnotation
 
 class PPIDecoder:
-    def __init__(self, model, text_model, tokenizer):
+    def __init__(self, model, tokenizer, text_model=None):
         self.model = model
         self.text_model = text_model
         self.tokenizer = tokenizer
@@ -14,18 +14,29 @@ class PPIDecoder:
         words = input_string.split()
         tokens  = self.tokenizer(words, return_tensors='pt', truncation=True, is_split_into_words=True)
         
-        metric_type = self.text_model(**tokens)["logits"].argmax(-1).tolist()[0]
-        if metric_type == 0:
-            type = "time"
-        elif metric_type == 1:
-            type = "count"
+        if self.text_model is not None:
+            metric_type = self.text_model(**tokens)["logits"].argmax(-1).tolist()[0]
+            if metric_type == 0:
+                type = "time"
+            elif metric_type == 1:
+                type = "count"
+            else:
+                type = "data"
+        
+            predictions = self.model[type](**tokens)["logits"].argmax(-1).tolist()[0][1:-1]
+            predictions_decoded = [Tags_list.TAGS_LIST[type][i] for i in predictions]
+            predictions_decoded_cleaned = self.clean_prediction_tags(predictions_decoded)
+        
         else:
-            type = "data"
-
-        predictions = self.model[type](**tokens)["logits"].argmax(-1).tolist()[0][1:-1]
-
-        predictions_decoded = [Tags_list.TAGS_LIST[type][i] for i in predictions]
-        predictions_decoded_cleaned = self.clean_prediction_tags(predictions_decoded)
+            predictions = self.model(**tokens)["logits"].argmax(-1).tolist()[0][1:-1]
+            predictions_decoded = [Tags_list.TAGS_LIST["general"][i] for i in predictions]
+            predictions_decoded_cleaned = self.clean_prediction_tags(predictions_decoded)
+            if "TMI" in predictions_decoded_cleaned:
+                type = "time"
+            elif "CE" in predictions_decoded_cleaned:
+                type = "count"
+            else:
+                type = "data"
 
         chunks = self.generate_chunks(words, predictions_decoded_cleaned)
 

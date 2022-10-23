@@ -17,7 +17,7 @@ $ pip3 install -f requirements.txt
 
 Note that to execute ppinat you need at least a version of Python >= 3.6
 
-You also need to download the [pytorch pre-trained model for the parser](https://www.mediafire.com/file/phpx38n1ihc8lcg/pytorch_model.bin/file) (it is not included because of its size).  It should be included into the `ppinat/PPIBot model` folder. 
+You also need to download the [pytorch pre-trained model for the parser](https://www.mediafire.com/file/phpx38n1ihc8lcg/pytorch_model.bin/file) (it is not included because of its size).  It should be included into the `ppinat/models/GeneralClassifier` folder. 
 
 
 ## Execution
