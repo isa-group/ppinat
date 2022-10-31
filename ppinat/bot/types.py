@@ -342,8 +342,11 @@ def get_tuple_by_threshold(threshold_a, threshold_b, possible_attributes, parser
     alt_match_a = []
     alt_match_b = []
 
-    values = np.array(list(possible_attributes.values())
-                      [:top_k]) / soft_max_temp
+    try:
+        values = np.array([pv.cpu() for pv in possible_attributes.values()][:top_k]) / soft_max_temp
+    except:
+        values = np.array(list(possible_attributes.values())
+                          [:top_k]) / soft_max_temp
     softmax = np.exp(values) / np.sum(np.exp(values))
     rel_a = np.max(softmax) * (1 - threshold_a)
     rel_b = np.max(softmax) * (1 - threshold_b)
