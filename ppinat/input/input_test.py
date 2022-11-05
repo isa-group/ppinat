@@ -14,21 +14,25 @@ from colorama import Fore
 from ppinat.helpers import load_log
 from ppinat.matcher.similarity import SimilarityComputer
 from ppinat.ppiparser.ppiannotation import PPIAnnotation, text_by_tag
-from ppinat.ppiparser.transformer import load_transformer, load_general_transformer
+from ppinat.ppiparser.transformer import load_transformer, load_general_transformer, load_perfect_decoder
 from ppinot4py.model import AppliesTo, RuntimeState, TimeInstantCondition
 from ppinat.models.gcloud import update_models
+
 
 def aggregate_results(attribute_results):
     return {k: sum([attribute_results[att][k] for att in attribute_results]) for k in ['good', 'regular', 'bad']}
 
+
 def print_results(attribute_results, goldstandard, identified):
     print(Fore.GREEN + "Good: " + str(attribute_results["good"]) + Fore.RESET)
     print(Fore.YELLOW + "Regular: " +
-        str(attribute_results["regular"]) + Fore.RESET)
+          str(attribute_results["regular"]) + Fore.RESET)
     print(Fore.RED + "Bad: " + str(attribute_results["bad"]) + Fore.RESET)
 
-    precision = attribute_results['good'] / identified if identified > 0 else -1
-    recall = attribute_results['good'] / goldstandard if goldstandard > 0 else -1
+    precision = attribute_results['good'] / \
+        identified if identified > 0 else -1
+    recall = attribute_results['good'] / \
+        goldstandard if goldstandard > 0 else -1
     print(f"Precision: {precision} / Recall: {recall}")
 
 
@@ -41,7 +45,7 @@ class InputTest:
         with open(args.filename, "r") as j:
             data = json.load(j)
             datasets = data["datasets"]
-            metrics = data["metrics"]
+            self.metrics = data["metrics"]
 
             self.weights = other["weights"] if "weights" in other else None
 
@@ -59,10 +63,12 @@ class InputTest:
             }
 
             self.seleted_model = args.model
-            if self.seleted_model == 1:
+            if self.seleted_model == "general":
                 print("Using general token classification model")
-            else:
+            elif self.seleted_model == "specific":
                 print("Using specific token classification model")
+            else:
+                print("Using perfect metric decoder")
 
             columns_values = []
 
@@ -90,7 +96,7 @@ class InputTest:
 
                 print(Fore.WHITE + "Analysing metrics..." + Fore.RESET)
                 SIMILARITY = self.similarity_charge(d["file"])
-                for m in metrics:
+                for m in self.metrics:
                     if m["dataset"] == d_name or d_name in m["dataset"]:
                         if m["type"] == "time":
                             self.analyse_metric(
@@ -111,26 +117,32 @@ class InputTest:
             print("Threshold 'a': " + str(t.BaseMetric.threshold_a) +
                   "\n" + "Threshold 'b': " + str(t.BaseMetric.threshold_b))
 
-            print("Parsing results:")
-            print(Fore.GREEN + "Good: " + str(self.tagging_results["good"]) + Fore.RESET)
-            print(Fore.YELLOW + "Regular: " +
-                  str(self.tagging_results["regular"]) + Fore.RESET)
-            print(Fore.RED + "Bad: " + str(self.tagging_results["bad"]) + Fore.RESET)
+            if self.seleted_model != "perfect":
+                print("Parsing results:")
+                print(Fore.GREEN + "Good: " +
+                      str(self.tagging_results["good"]) + Fore.RESET)
+                print(Fore.YELLOW + "Regular: " +
+                      str(self.tagging_results["regular"]) + Fore.RESET)
+                print(Fore.RED + "Bad: " +
+                      str(self.tagging_results["bad"]) + Fore.RESET)
 
             print("Metric results:")
-            print(Fore.GREEN + "Good: " + str(self.ppi_results["good"]) + Fore.RESET)
+            print(Fore.GREEN + "Good: " +
+                  str(self.ppi_results["good"]) + Fore.RESET)
             print(Fore.YELLOW + "Regular: " +
                   str(self.ppi_results["regular"]) + Fore.RESET)
-            print(Fore.RED + "Bad: " + str(self.ppi_results["bad"]) + Fore.RESET)
+            print(Fore.RED + "Bad: " +
+                  str(self.ppi_results["bad"]) + Fore.RESET)
             print("Nothing: " + str(self.ppi_results["nothing"]))
 
             overall_results = aggregate_results(self.attribute_results)
             print("Attribute results:")
-            print_results(overall_results, sum(self.goldstandard_atts.values()), sum(self.identified_atts.values()))
+            print_results(overall_results, sum(
+                self.goldstandard_atts.values()), sum(self.identified_atts.values()))
             for att in attributes:
                 print(f"Attribute {att} results:")
-                print_results(self.attribute_results[att], self.goldstandard_atts[att], self.identified_atts[att])
-
+                print_results(
+                    self.attribute_results[att], self.goldstandard_atts[att], self.identified_atts[att])
 
     def comparing_attributes(self, attribute, attribute_result):
         comparison = False
@@ -139,7 +151,7 @@ class InputTest:
             if attribute["attribute"] == attribute_result.value:
                 comparison = True
 
-        return comparison        
+        return comparison
 
     def comparing_conditions(self, condition, condition_result):
         comparison = False
@@ -230,7 +242,7 @@ class InputTest:
     def show_condition_results(self, associated_condition, results):
         if associated_condition:
             matching_color = Fore.GREEN
-            text = f"Matched condition"            
+            text = f"Matched condition"
         else:
             matching_color = Fore.RED
             if results is None:
@@ -239,7 +251,6 @@ class InputTest:
                 text = f"Wrongly matched conditions: {results.op} {results.value.value}"
 
         print(matching_color + text + Fore.RESET)
-
 
     def param_eval(self, goldstandard, command, command_param):
         if command_param in command.values:
@@ -267,67 +278,70 @@ class InputTest:
                 output = 'regular'
         else:
             output = 'bad'
-        
 
         return {'match': matching_value, 'pos': position_value, 'output': output, 'values': values_list}
 
-
     def analyse_metric(self, command, similarity, metric, dataset_name, args, columns_values):
         recognized_entity = r.RecognizedEntities(None, metric["description"])
-        
+
         try:
             command.match_entities(recognized_entity, similarity)
         except:
             return
 
-        annotation: PPIAnnotation = similarity.metric_decoder(recognized_entity.text)
+        annotation: PPIAnnotation = similarity.metric_decoder(
+            recognized_entity.text)
 
-        print(Fore.BLUE + "Metric -----> " + metric["description"] + Fore.RESET)
+        if self.seleted_model != "perfect":
+            print(Fore.BLUE + "Metric -----> " +
+                  metric["description"] + Fore.RESET)
 
-        from_text = text_by_tag(annotation, "TSE")
-        to_text = text_by_tag(annotation, "TEE")
-        only_text = text_by_tag(annotation, "TBE")
-        when_text = text_by_tag(annotation, "CE")
-        data_attribute = text_by_tag(annotation, "AttributeName")
-        group_text = text_by_tag(annotation, 'GBC')
-        denominator_text = text_by_tag(annotation, 'FDE')
-        aggregation_text = annotation.get_aggregation_function()
-        conditional_text = text_by_tag(annotation, 'CCI')
-        conditional_attr_text = text_by_tag(annotation, 'AttributeValue')
+            from_text = text_by_tag(annotation, "TSE")
+            to_text = text_by_tag(annotation, "TEE")
+            only_text = text_by_tag(annotation, "TBE")
+            when_text = text_by_tag(annotation, "CE")
+            data_attribute = text_by_tag(annotation, "AttributeName")
+            group_text = text_by_tag(annotation, 'GBC')
+            denominator_text = text_by_tag(annotation, 'FDE')
+            aggregation_text = annotation.get_aggregation_function()
+            conditional_text = text_by_tag(annotation, 'CCI')
+            conditional_attr_text = text_by_tag(annotation, 'AttributeValue')
 
-        tags = {
-            "TSE": from_text,
-            "TEE": to_text,
-            "TBE": only_text,
-            "CE": when_text,
-            "AttributeName": data_attribute,
-            "GBC": group_text,
-            "FDE": denominator_text,
-            "AGR": aggregation_text,
-            "CCI": conditional_text,
-            "AttributeValue": conditional_attr_text
-        }
+            tags = {
+                "TSE": from_text,
+                "TEE": to_text,
+                "TBE": only_text,
+                "CE": when_text,
+                "AttributeName": data_attribute,
+                "GBC": group_text,
+                "FDE": denominator_text,
+                "AGR": aggregation_text,
+                "CCI": conditional_text,
+                "AttributeValue": conditional_attr_text
+            }
 
-        good_tags = 0
-        bad_tags = 0
-        
-        for tag in metric["slots"].keys():
-            if metric["slots"][tag] == tags[tag]:
-                good_tags += 1
+            good_tags = 0
+            bad_tags = 0
+
+            for tag in metric["slots"].keys():
+                if metric["slots"][tag] == tags[tag]:
+                    good_tags += 1
+                else:
+                    bad_tags += 1
+                    print(
+                        f"Correct slot for {tag} is '{metric['slots'][tag]}' but found '{tags[tag]}'")
+
+            if good_tags == 0:
+                self.tagging_results["bad"] += 1
+                print(f"{Fore.RED}Bad tagged{Fore.RESET}")
+            elif good_tags >= 1 and bad_tags >= 1:
+                self.tagging_results["regular"] += 1
+                print(
+                    f"{Fore.YELLOW}{good_tags}/{good_tags + bad_tags} slots have been tagged well{Fore.RESET}")
             else:
-                bad_tags += 1
-                print(f"Correct slot for {tag} is '{metric['slots'][tag]}' but found '{tags[tag]}'")
-        
-        if good_tags == 0:
-            self.tagging_results["bad"] += 1
-            print(f"{Fore.RED}Bad tagged{Fore.RESET}")
-        elif good_tags >= 1 and bad_tags >= 1:
-            self.tagging_results["regular"] += 1
-            print(f"{Fore.YELLOW}{good_tags}/{good_tags + bad_tags} slots have been tagged well{Fore.RESET}")
-        else:
-            self.tagging_results["good"] += 1
-            print(f"{Fore.GREEN}All slots have been tagged well{Fore.RESET}")
-        
+                self.tagging_results["good"] += 1
+                print(f"{Fore.GREEN}All slots have been tagged well{Fore.RESET}")
+
         result = None
         if("goldstandard" in metric and dataset_name in metric["goldstandard"]):
             goldstandard = metric["goldstandard"][dataset_name]
@@ -335,8 +349,10 @@ class InputTest:
                 from_condition = goldstandard["from_condition"]
                 to_condition = goldstandard["to_condition"]
 
-                from_eval = self.param_eval(lambda x: self.comparing_conditions(from_condition, x), command, "from_cond")
-                to_eval = self.param_eval(lambda x: self.comparing_conditions(to_condition, x), command, "to_cond")
+                from_eval = self.param_eval(lambda x: self.comparing_conditions(
+                    from_condition, x), command, "from_cond")
+                to_eval = self.param_eval(lambda x: self.comparing_conditions(
+                    to_condition, x), command, "to_cond")
 
                 self.attribute_results['from'][from_eval['output']] += 1
                 self.attribute_results['to'][to_eval['output']] += 1
@@ -361,18 +377,18 @@ class InputTest:
                 else:
                     result = 'regular'
 
-
             elif metric["type"] == "count":
                 condition = goldstandard["count_condition"]
 
-                when_eval = self.param_eval(lambda x: self.comparing_conditions(condition, x), command, "when")
+                when_eval = self.param_eval(
+                    lambda x: self.comparing_conditions(condition, x), command, "when")
                 self.attribute_results['when'][when_eval['output']] += 1
                 self.goldstandard_atts['when'] += 1
                 if len(when_eval['values']) > 0:
                     self.identified_atts['when'] += 1
 
                 self.show_results("when condition",
-                    when_eval['match'], when_eval['pos'], when_eval['values'])
+                                  when_eval['match'], when_eval['pos'], when_eval['values'])
 
                 cond = self.condition_eval(goldstandard, command)
                 if cond is not None:
@@ -385,18 +401,18 @@ class InputTest:
                 else:
                     result = 'regular'
 
-
             elif metric["type"] == "data":
                 condition = goldstandard["data_condition"]
 
-                data_eval = self.param_eval(lambda x: self.comparing_attribute(condition, x), command, "attribute")
+                data_eval = self.param_eval(lambda x: self.comparing_attribute(
+                    condition, x), command, "attribute")
                 self.attribute_results['data'][data_eval['output']] += 1
                 self.goldstandard_atts['data'] += 1
                 if len(data_eval['values']) > 0:
                     self.identified_atts['data'] += 1
 
                 self.show_results("data attribute",
-                    data_eval['match'], data_eval['pos'], data_eval['values'])
+                                  data_eval['match'], data_eval['pos'], data_eval['values'])
 
                 cond = self.condition_eval(goldstandard, command)
                 if cond is not None:
@@ -409,7 +425,6 @@ class InputTest:
                 else:
                     result = 'regular'
 
-
             if annotation.get_aggregation_function() is not None:
                 agg_command = commands.ComputeMetricCommand()
                 agg_command.match_entities(recognized_entity, similarity)
@@ -417,20 +432,24 @@ class InputTest:
                 if "aggregation" in goldstandard:
                     self.goldstandard_atts['aggregation'] += 1
 
-                    agg_eval = self.param_eval(lambda x: x == goldstandard['aggregation'], agg_command, "agg_function")
+                    agg_eval = self.param_eval(
+                        lambda x: x == goldstandard['aggregation'], agg_command, "agg_function")
                     self.attribute_results['aggregation'][agg_eval['output']] += 1
                     if len(agg_eval['values']) > 0:
                         self.identified_atts['aggregation'] += 1
-                    self.show_results("aggregation", agg_eval['match'], agg_eval['pos'], agg_eval['values'])
+                    self.show_results(
+                        "aggregation", agg_eval['match'], agg_eval['pos'], agg_eval['values'])
 
                     filter_eval = None
                     if "filter" in goldstandard:
                         self.goldstandard_atts["filter"] += 1
-                        filter_eval = self.param_eval(lambda x: self.comparing_conditions(goldstandard["filter"], x), command, "denominator")
+                        filter_eval = self.param_eval(lambda x: self.comparing_conditions(
+                            goldstandard["filter"], x), command, "denominator")
                         self.attribute_results['filter'][filter_eval['output']] += 1
                         if len(filter_eval['values']) > 0:
                             self.identified_atts['filter'] += 1
-                        self.show_results("filter", filter_eval['match'], filter_eval['pos'], filter_eval['values'])
+                        self.show_results(
+                            "filter", filter_eval['match'], filter_eval['pos'], filter_eval['values'])
 
                     if result == 'good' and agg_eval['output'] == 'good' and (filter_eval is None or cond == 'good'):
                         result = 'good'
@@ -486,10 +505,10 @@ class InputTest:
             else:
                 result = "bad"
 
-            self.show_condition_results(comparison_associated, associated_condition_result)
+            self.show_condition_results(
+                comparison_associated, associated_condition_result)
 
         return result
-
 
     def extract_excel(self, args, similarity, metric, columns_values, result):
         if args.verbosity:
@@ -518,21 +537,25 @@ class InputTest:
     def similarity_charge(self, log):
         NLP = spacy.load('en_core_web_lg')
         LOG = load_log(log, id_case="ID", time_column="DATE",
-                    activity_column="ACTIVITY")
+                       activity_column="ACTIVITY")
 
-        if self.seleted_model == 1:
+        if self.seleted_model == "general":
             TOKEN_CLASSIFIER = './ppinat/models/GeneralClassifier'
-            TRANSFORMER = load_general_transformer(TOKEN_CLASSIFIER)
-            
-        else:
+            DECODER = load_general_transformer(TOKEN_CLASSIFIER)
+
+        elif self.seleted_model == "specific":
             update_models()
             TEXT_CLASSIFIER = './ppinat/models/TextClassification'
             TIME_MODEL = './ppinat/models/TimeModel'
             COUNT_MODEL = './ppinat/models/CountModel'
             DATA_MODEL = './ppinat/models/DataModel'
-            TRANSFORMER = load_transformer(TEXT_CLASSIFIER, TIME_MODEL, COUNT_MODEL, DATA_MODEL)
+            DECODER = load_transformer(
+                TEXT_CLASSIFIER, TIME_MODEL, COUNT_MODEL, DATA_MODEL)
+        else:
+            DECODER = load_perfect_decoder(self.metrics)
 
-        SIMILARITY = SimilarityComputer(LOG, NLP, metric_decoder=TRANSFORMER, weights = self.weights)
+        SIMILARITY = SimilarityComputer(
+            LOG, NLP, metric_decoder=DECODER, weights=self.weights)
         return SIMILARITY
 
     def decompress(self, filename):

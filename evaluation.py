@@ -15,7 +15,7 @@ def compute_precision_recall(overall, identified, goldstandard, allow_regular = 
 parser = argparse.ArgumentParser()
 parser.add_argument('filename', metavar='FILENAME', help='the file with the test', nargs='?', default='input/metrics_dataset-traffic-test.json' )
 parser.add_argument("-v", "--verbosity" ,help="If this option is activated, you will be able to view the complete information in a CSV file called input_test_info.csv", action="store_true")
-parser.add_argument("-m", "--model", help="If this option is activated, you will be able to choose the model to evaluate. 1: General token classification, 2: Specific token classification", type=int, default=2)
+parser.add_argument("-m", "--model", help="If this option is activated, you will be able to choose the model to evaluate. general : General token classifier, specific: Specific token classifier, perfect : Perfect token classifier", default="specific")
 
 one_slot_weights = {
     "emb_is": {
