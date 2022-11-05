@@ -1,0 +1,12 @@
+{
+  "datasets": [
+    "./input/metrics_dataset-domesticDeclarations.json",
+    "./input/metrics_dataset-traffic-test.json",
+    "./input/metrics_dataset.json"
+  ],
+  "parsing": ["viterbi", "specific", "general", "perfect"],
+  "matching": {
+    "single": "emb_is",
+    "multiple": "emb_is"
+  }
+}

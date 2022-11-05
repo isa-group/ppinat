@@ -15,6 +15,7 @@ from ppinat.helpers import load_log
 from ppinat.matcher.similarity import SimilarityComputer
 from ppinat.ppiparser.ppiannotation import PPIAnnotation, text_by_tag
 from ppinat.ppiparser.transformer import load_transformer, load_general_transformer, load_perfect_decoder
+from ppinat.ppiparser.decoder import load_decoder
 from ppinot4py.model import AppliesTo, RuntimeState, TimeInstantCondition
 from ppinat.models.gcloud import update_models
 
@@ -37,12 +38,12 @@ def print_results(attribute_results, goldstandard, identified):
 
 
 class InputTest:
-    def __init__(self, args, other=None):
-        if not exists(args.filename):
+    def __init__(self, args, dataset, parsing_model, other=None):
+        if not exists(dataset):
             raise RuntimeError(
-                f"File provided does not exist: {args.filename}")
+                f"File provided does not exist: {dataset}")
 
-        with open(args.filename, "r") as j:
+        with open(dataset, "r") as j:
             data = json.load(j)
             datasets = data["datasets"]
             self.metrics = data["metrics"]
@@ -62,13 +63,15 @@ class InputTest:
                 "bad": 0
             }
 
-            self.seleted_model = args.model
+            self.seleted_model = parsing_model
             if self.seleted_model == "general":
                 print("Using general token classification model")
             elif self.seleted_model == "specific":
                 print("Using specific token classification model")
-            else:
+            elif self.seleted_model == "perfect":
                 print("Using perfect metric decoder")
+            else:
+                print("Using viterbi decoder")
 
             columns_values = []
 
@@ -107,7 +110,7 @@ class InputTest:
                         elif m["type"] == "data":
                             self.analyse_metric(
                                 commands.DataMetricCommand(), SIMILARITY, m, d_name, args, columns_values)
-
+                    break
             if args.verbosity:
                 excel = pd.DataFrame(columns_values)
                 excel.to_csv("input/info.csv")
@@ -283,7 +286,6 @@ class InputTest:
 
     def analyse_metric(self, command, similarity, metric, dataset_name, args, columns_values):
         recognized_entity = r.RecognizedEntities(None, metric["description"])
-
         try:
             command.match_entities(recognized_entity, similarity)
         except:
@@ -293,7 +295,7 @@ class InputTest:
             recognized_entity.text)
 
         if self.seleted_model != "perfect":
-            print(Fore.BLUE + "Metric -----> " +
+            print(Fore.BLUE + "Metric --> " +
                   metric["description"] + Fore.RESET)
 
             from_text = text_by_tag(annotation, "TSE")
@@ -551,8 +553,14 @@ class InputTest:
             DATA_MODEL = './ppinat/models/DataModel'
             DECODER = load_transformer(
                 TEXT_CLASSIFIER, TIME_MODEL, COUNT_MODEL, DATA_MODEL)
-        else:
+
+        elif self.seleted_model == "perfect":
             DECODER = load_perfect_decoder(self.metrics)
+
+        else:
+            TRAINING_FILE = 'input/parser_training/parser_training_data.json'
+            PARSER_SERIAL_FILE = 'input/parser_training/parser_serialized.p'
+            DECODER, NLP = load_decoder(TRAINING_FILE, PARSER_SERIAL_FILE)
 
         SIMILARITY = SimilarityComputer(
             LOG, NLP, metric_decoder=DECODER, weights=self.weights)

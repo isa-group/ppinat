@@ -1,0 +1,1445 @@
+{
+  "data": [
+    {
+      "description": "Elapsed time between an action requirement is notified until the action is performed.",
+      "type": "time",
+      "annotation": [
+        {
+          "text": "Elapsed time",
+          "tag": "TMI"
+        },
+        {
+          "text": "between an",
+          "tag": "TSI"
+        },
+        {
+          "text": "action requirement is notified",
+          "tag": "TSE",
+          "type:": "slot"
+        },
+        {
+          "text": "until",
+          "tag": "TEI"
+        },
+        {
+          "text": "the action is performed.",
+          "tag": "TEE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "Elapsed time between action is performed until the corresponding documentation is delivered.",
+      "type": "time",
+      "annotation": [
+        {
+          "text": "Elapsed time",
+          "tag": "TMI"
+        },
+        {
+          "text": "between",
+          "tag": "TSI"
+        },
+        {
+          "text": "action is performed",
+          "tag": "TSE",
+          "type:": "slot"
+        },
+        {
+          "text": "until the",
+          "tag": "TEI"
+        },
+        {
+          "text": "corresponding documentation is delivered.",
+          "tag": "TEE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "the elapsed time between the notification to contractor of the installation requirement and its planning.",
+      "type": "time",
+      "annotation": [
+        {
+          "text": "elapsed time",
+          "tag": "TMI"
+        },
+        {
+          "text": "between",
+          "tag": "TSI"
+        },
+        {
+          "text": "the notification to contractor of the installation requirement",
+          "tag": "TSE",
+          "type:": "slot"
+        },
+        {
+          "text": "and",
+          "tag": "TEI"
+        },
+        {
+          "text": "its planning.",
+          "tag": "TEE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "the elapsed time between APC contracts the service and contractor is able to start it.",
+      "type": "time",
+      "annotation": [
+        {
+          "text": "elapsed time",
+          "tag": "TMI"
+        },
+        {
+          "text": "between",
+          "tag": "TSI"
+        },
+        {
+          "text": "APC contracts the service",
+          "tag": "TSE",
+          "type:": "slot"
+        },
+        {
+          "text": "and",
+          "tag": "TEI"
+        },
+        {
+          "text": "contractor is able to start it.",
+          "tag": "TEE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "the elapsed time between the end and closure of the installation and the documentation submission",
+      "type": "time",
+      "annotation": [
+        {
+          "text": "elapsed time",
+          "tag": "TMI"
+        },
+        {
+          "text": "between",
+          "tag": "TSI"
+        },
+        {
+          "text": "the end and closure of the installation",
+          "tag": "TSE",
+          "type:": "slot"
+        },
+        {
+          "text": "and",
+          "tag": "TEI"
+        },
+        {
+          "text": "the documentation submission",
+          "tag": "TEE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "the elapsed time between repair notification and repair is ended and closured.",
+      "type": "time",
+      "annotation": [
+        {
+          "text": "elapsed time",
+          "tag": "TMI"
+        },
+        {
+          "text": "between",
+          "tag": "TSI"
+        },
+        {
+          "text": "repair notification",
+          "tag": "TSE",
+          "type:": "slot"
+        },
+        {
+          "text": "and",
+          "tag": "TEI"
+        },
+        {
+          "text": "repair is ended and closured.",
+          "tag": "TEE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "average time that it takes the REDES department of the ISC to solve the incident of the user from that it is communicated to REDES until the user is notified that its incident due to the blocked domain at the router level has been solved",
+      "type": "time",
+      "annotation": [
+        {
+          "text": "average",
+          "tag": "AGR",
+          "type:": "slot"
+        },
+        {
+          "text": "time that it takes the REDES department of the ISC to solve the incident of the user",
+          "tag": "TMI"
+        },
+        {
+          "text": "from",
+          "tag": "TSI"
+        },
+        {
+          "text": "that it is communicated to REDES",
+          "tag": "TSE",
+          "type:": "slot"
+        },
+        {
+          "text": "until",
+          "tag": "TEI"
+        },
+        {
+          "text": "the user is notified that its incident due to the blocked domain at the router level has been solved",
+          "tag": "TEE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "the elapsed time between the notification to contractor of the intervention requirement and its planning",
+      "type": "time",
+      "annotation": [
+        {
+          "text": "elapsed time",
+          "tag": "TMI"
+        },
+        {
+          "text": "between",
+          "tag": "TSI"
+        },
+        {
+          "text": "the notification to contractor of the intervention requirement",
+          "tag": "TSE",
+          "type:": "slot"
+        },
+        {
+          "text": "and",
+          "tag": "TEI"
+        },
+        {
+          "text": "its planning",
+          "tag": "TEE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "The elapsed time between the resource (technician) assignment and the intervention start time.",
+      "type": "time",
+      "annotation": [
+        {
+          "text": "elapsed time",
+          "tag": "TMI"
+        },
+        {
+          "text": "between",
+          "tag": "TSI"
+        },
+        {
+          "text": "the resource (technician) assignment",
+          "tag": "TSE",
+          "type:": "slot"
+        },
+        {
+          "text": "and",
+          "tag": "TEI"
+        },
+        {
+          "text": "the intervention start time.",
+          "tag": "TEE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "the elapsed time between the technician arrival to headquarters and the end and closure of the intervention.",
+      "type": "time",
+      "annotation": [
+        {
+          "text": "elapsed time",
+          "tag": "TMI"
+        },
+        {
+          "text": "between",
+          "tag": "TSI"
+        },
+        {
+          "text": "the technician arrival to headquarters",
+          "tag": "TSE",
+          "type:": "slot"
+        },
+        {
+          "text": "and",
+          "tag": "TEI"
+        },
+        {
+          "text": "the end and closure of the intervention.",
+          "tag": "TEE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "the elapsed time between the end and closure of the intervention at headquarters and the documentation submission",
+      "type": "time",
+      "annotation": [
+        {
+          "text": "elapsed time",
+          "tag": "TMI"
+        },
+        {
+          "text": "between",
+          "tag": "TSI"
+        },
+        {
+          "text": "the end and closure of the intervention at headquarters",
+          "tag": "TSE",
+          "type:": "slot"
+        },
+        {
+          "text": "and",
+          "tag": "TEI"
+        },
+        {
+          "text": "the documentation submission",
+          "tag": "TEE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "average time to solve an incident due to virus",
+      "type": "time",
+      "annotation": [
+        {
+          "text": "average",
+          "tag": "AGR",
+          "type:": "slot"
+        },
+        {
+          "text": "time",
+          "tag": "TMI"
+        },
+        {
+          "text": "to solve an incident due to virus",
+          "tag": "TBE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "Delays caused by committees",
+      "type": "time",
+      "annotation": [
+        {
+          "text": "Delays",
+          "tag": "TMI"
+        },
+        {
+          "text": "caused by committees",
+          "tag": "TBE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "average time elevated waiting for committee",
+      "type": "time",
+      "annotation": [
+        {
+          "text": "average",
+          "tag": "AGR",
+          "type:": "slot"
+        },
+        {
+          "text": "time elevated",
+          "tag": "TMI"
+        },
+        {
+          "text": "waiting for committee",
+          "tag": "TBE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "Average time to analyse a request",
+      "type": "time",
+      "annotation": [
+        {
+          "text": "Average",
+          "tag": "AGR",
+          "type:": "slot"
+        },
+        {
+          "text": "time",
+          "tag": "TMI"
+        },
+        {
+          "text": "to analyse a request",
+          "tag": "TBE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "average time of RFC under analysis",
+      "type": "time",
+      "annotation": [
+        {
+          "text": "average",
+          "tag": "AGR",
+          "type:": "slot"
+        },
+        {
+          "text": "time of",
+          "tag": "TMI"
+        },
+        {
+          "text": "RFC under analysis",
+          "tag": "TBE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "Average lifetime of an RFC per contractor",
+      "type": "time",
+      "annotation": [
+        {
+          "text": "Average",
+          "tag": "AGR",
+          "type:": "slot"
+        },
+        {
+          "text": "lifetime of",
+          "tag": "TMI"
+        },
+        {
+          "text": "an RFC",
+          "tag": "TBE",
+          "type:": "slot"
+        },
+        {
+          "text": "per",
+          "tag": "GBI"
+        },
+        {
+          "text": "contractor",
+          "tag": "GBC",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "Total lifetime of an RFC per contractor",
+      "type": "time",
+      "annotation": [
+        {
+          "text": "Total",
+          "tag": "AGR",
+          "type:": "slot"
+        },
+        {
+          "text": "lifetime of",
+          "tag": "TMI"
+        },
+        {
+          "text": "an RFC",
+          "tag": "TBE",
+          "type:": "slot"
+        },
+        {
+          "text": "per",
+          "tag": "GBI"
+        },
+        {
+          "text": "contractor",
+          "tag": "GBC",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "Total Average lifetime of an RFC",
+      "type": "time",
+      "annotation": [
+        {
+          "text": "Total Average",
+          "tag": "AGR",
+          "type:": "slot"
+        },
+        {
+          "text": "lifetime of",
+          "tag": "TMI"
+        },
+        {
+          "text": "an RFC",
+          "tag": "TBE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "number of users within the black list",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "number of",
+          "tag": "CMI"
+        },
+        {
+          "text": "users within the black list",
+          "tag": "CE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "percentage of problems sending emails",
+      "type": "fraction",
+      "annotation": [
+        {
+          "text": "percentage of",
+          "tag": "FMI"
+        },
+        {
+          "text": "problems sending emails",
+          "tag": "FNE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "percentage of problems receiving emails with respect to the total number of problems due to sending or receiving emails",
+      "type": "fraction",
+      "annotation": [
+        {
+          "text": "percentage of",
+          "tag": "FMI"
+        },
+        {
+          "text": "problems receiving emails",
+          "tag": "FNE",
+          "type:": "slot"
+        },
+        {
+          "text": "with respect to",
+          "tag": "FDI"
+        },
+        {
+          "text": "the total number of problems due to sending or receiving emails",
+          "tag": "FDE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "% cancelled RFCs due to Registry error from all registered RFCs",
+      "type": "fraction",
+      "annotation": [
+        {
+          "text": "%",
+          "tag": "FMI"
+        },
+        {
+          "text": "cancelled RFCs due to Registry error",
+          "tag": "FNE",
+          "type:": "slot"
+        },
+        {
+          "text": "from",
+          "tag": "FDI"
+        },
+        {
+          "text": "all registered RFCs",
+          "tag": "FDE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "% Corrective RFCs from all Approved RFCs",
+      "type": "fraction",
+      "annotation": [
+        {
+          "text": "%",
+          "tag": "FMI"
+        },
+        {
+          "text": "Corrective RFCs",
+          "tag": "FNE",
+          "type:": "slot"
+        },
+        {
+          "text": "from",
+          "tag": "FDI"
+        },
+        {
+          "text": "all Approved RFCs",
+          "tag": "FDE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "Percentage of incidents that are not solved one week after they were registered.",
+      "type": "fraction",
+      "annotation": [
+        {
+          "text": "Percentage of",
+          "tag": "FMI"
+        },
+        {
+          "text": "incidents that are not solved one week after they were registered.",
+          "tag": "FNE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "Percentage of incidents that are reopened because they were not correctly solved.",
+      "type": "fraction",
+      "annotation": [
+        {
+          "text": "Percentage of",
+          "tag": "FMI"
+        },
+        {
+          "text": "incidents that are reopened because they were not correctly solved.",
+          "tag": "FNE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "number of users blocked for misusing email",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "number of",
+          "tag": "CMI"
+        },
+        {
+          "text": "users blocked for misusing email",
+          "tag": "CE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "total number of incidents due to mailbox management",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "total",
+          "tag": "AGR",
+          "type:": "slot"
+        },
+        {
+          "text": "number of",
+          "tag": "CMI"
+        },
+        {
+          "text": "incidents due to mailbox management",
+          "tag": "CE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "average number of incidents related to the address book management",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "average",
+          "tag": "AGR",
+          "type:": "slot"
+        },
+        {
+          "text": "number of",
+          "tag": "CMI"
+        },
+        {
+          "text": "incidents related to the address book management",
+          "tag": "CE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "average number of incidents related to the calendar",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "average",
+          "tag": "AGR",
+          "type:": "slot"
+        },
+        {
+          "text": "number of",
+          "tag": "CMI"
+        },
+        {
+          "text": "incidents related to the calendar",
+          "tag": "CE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "average number of incidents related to the email management in general",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "average",
+          "tag": "AGR",
+          "type:": "slot"
+        },
+        {
+          "text": "number of",
+          "tag": "CMI"
+        },
+        {
+          "text": "incidents related to the email management in general",
+          "tag": "CE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "number of received messages",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "number of",
+          "tag": "CMI"
+        },
+        {
+          "text": "received messages",
+          "tag": "CE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "number of managed messages per courier",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "number of",
+          "tag": "CMI"
+        },
+        {
+          "text": "managed messages",
+          "tag": "CE",
+          "type:": "slot"
+        },
+        {
+          "text": "per",
+          "tag": "GBI"
+        },
+        {
+          "text": "courier",
+          "tag": "GBC",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "number of discarded connections due to black list (RBL)",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "number of",
+          "tag": "CMI"
+        },
+        {
+          "text": "discarded connections due to black list (RBL)",
+          "tag": "CE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "number of messages with virus",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "number of",
+          "tag": "CMI"
+        },
+        {
+          "text": "messages with virus",
+          "tag": "CE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "number of messages tagged as spam",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "number of",
+          "tag": "CMI"
+        },
+        {
+          "text": "messages tagged as spam",
+          "tag": "CE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "number of times the university of seville clocked a remote MX (mail exchange)",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "number of",
+          "tag": "CMI"
+        },
+        {
+          "text": "times the university of seville clocked a remote MX (mail exchange)",
+          "tag": "CE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "number of incidents happening with the distribution list",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "number of",
+          "tag": "CMI"
+        },
+        {
+          "text": "incidents happening with the distribution list",
+          "tag": "CE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "number of incidents due to virus",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "number of",
+          "tag": "CMI"
+        },
+        {
+          "text": "incidents due to virus",
+          "tag": "CE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "number of users blocked due to massive sending of emails",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "number of",
+          "tag": "CMI"
+        },
+        {
+          "text": "users blocked due to massive sending of emails",
+          "tag": "CE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "number of problems happened due to phishing",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "number of",
+          "tag": "CMI"
+        },
+        {
+          "text": "problems happened due to phishing",
+          "tag": "CE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "number of Cancelled RFCs due to \"registry error\"",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "number of",
+          "tag": "CMI"
+        },
+        {
+          "text": "Cancelled RFCs due to \"registry error\"",
+          "tag": "CE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "Volume of Corrective changes",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "Volume of",
+          "tag": "CMI"
+        },
+        {
+          "text": "Corrective changes",
+          "tag": "CE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "Volume of analysis requests",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "Volume of",
+          "tag": "CMI"
+        },
+        {
+          "text": "analysis requests",
+          "tag": "CE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "Number of RFCs under \"Analysis\"",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "Number of",
+          "tag": "CMI"
+        },
+        {
+          "text": "RFCs under \"Analysis\"",
+          "tag": "CE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "Volume of RFCs per type of change",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "Volume of",
+          "tag": "CMI"
+        },
+        {
+          "text": "RFCs",
+          "tag": "CE",
+          "type:": "slot"
+        },
+        {
+          "text": "per",
+          "tag": "GBI"
+        },
+        {
+          "text": "type of change",
+          "tag": "GBC",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "Volume of RFCs per project",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "Volume of",
+          "tag": "CMI"
+        },
+        {
+          "text": "RFCs",
+          "tag": "CE",
+          "type:": "slot"
+        },
+        {
+          "text": "per",
+          "tag": "GBI"
+        },
+        {
+          "text": "project",
+          "tag": "GBC",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "Volume of RFCs per application",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "Volume of",
+          "tag": "CMI"
+        },
+        {
+          "text": "RFCs",
+          "tag": "CE",
+          "type:": "slot"
+        },
+        {
+          "text": "per",
+          "tag": "GBI"
+        },
+        {
+          "text": "application",
+          "tag": "GBC",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "Volume of RFCs per contractor per project",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "Volume of",
+          "tag": "CMI"
+        },
+        {
+          "text": "RFCs",
+          "tag": "CE",
+          "type:": "slot"
+        },
+        {
+          "text": "per",
+          "tag": "GBI"
+        },
+        {
+          "text": "contractor per project",
+          "tag": "GBC",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "Volume of RFCs per contractor per application",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "Volume of",
+          "tag": "CMI"
+        },
+        {
+          "text": "RFCs per contractor",
+          "tag": "CE",
+          "type:": "slot"
+        },
+        {
+          "text": "per",
+          "tag": "GBI"
+        },
+        {
+          "text": "application",
+          "tag": "GBC",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "Number of new incidents opened in a period of time",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "Number of",
+          "tag": "CMI"
+        },
+        {
+          "text": "new incidents opened in a period of time",
+          "tag": "CE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "Number of incidents solved in a period of time  Maximum Number of incidents solved in a period of time",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "Number of",
+          "tag": "CMI"
+        },
+        {
+          "text": "incidents solved in a period of time",
+          "tag": "CE",
+          "type:": "slot"
+        },
+        {
+          "text": "Maximum",
+          "tag": "AGR",
+          "type:": "slot"
+        },
+        {
+          "text": "Number of",
+          "tag": "CMI"
+        },
+        {
+          "text": "incidents solved in a period of time",
+          "tag": "CE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "the duration between the time instants when activity1 becomes state1 and when activity2 becomes state2",
+      "type": "time",
+      "annotation": [
+        {
+          "text": "duration",
+          "tag": "TMI"
+        },
+        {
+          "text": "between the time instants when",
+          "tag": "TSI"
+        },
+        {
+          "text": "activity1 becomes state1",
+          "tag": "TSE",
+          "type:": "slot"
+        },
+        {
+          "text": "and when",
+          "tag": "TEI"
+        },
+        {
+          "text": "activity2 becomes state2",
+          "tag": "TEE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "average duration between the time instants when activity1 becomes state1 and when activity2 becomes state2",
+      "type": "time",
+      "annotation": [
+        {
+          "text": "average",
+          "tag": "AGR",
+          "type:": "slot"
+        },
+        {
+          "text": "duration",
+          "tag": "TMI"
+        },
+        {
+          "text": "between the time instants when",
+          "tag": "TSI"
+        },
+        {
+          "text": "activity1 becomes state1",
+          "tag": "TSE",
+          "type:": "slot"
+        },
+        {
+          "text": "and when",
+          "tag": "TEI"
+        },
+        {
+          "text": "activity2 becomes state2",
+          "tag": "TEE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "minimum duration between the time instants when activity1 becomes state1 and when activity2 becomes state2",
+      "type": "time",
+      "annotation": [
+        {
+          "text": "minimum",
+          "tag": "AGR",
+          "type:": "slot"
+        },
+        {
+          "text": "duration",
+          "tag": "TMI"
+        },
+        {
+          "text": "between the time instants when",
+          "tag": "TSI"
+        },
+        {
+          "text": "activity1 becomes state1",
+          "tag": "TSE",
+          "type:": "slot"
+        },
+        {
+          "text": "and when",
+          "tag": "TEI"
+        },
+        {
+          "text": "activity2 becomes state2",
+          "tag": "TEE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "minimal duration between the time instants when activity1 becomes state1 and when activity2 becomes state2",
+      "type": "time",
+      "annotation": [
+        {
+          "text": "minimal",
+          "tag": "AGR",
+          "type:": "slot"
+        },
+        {
+          "text": "duration",
+          "tag": "TMI"
+        },
+        {
+          "text": "between the time instants when",
+          "tag": "TSI"
+        },
+        {
+          "text": "activity1 becomes state1",
+          "tag": "TSE",
+          "type:": "slot"
+        },
+        {
+          "text": "and when",
+          "tag": "TEI"
+        },
+        {
+          "text": "activity2 becomes state2",
+          "tag": "TEE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "the number of times activity1 becomes state1",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "number of times",
+          "tag": "CMI"
+        },
+        {
+          "text": "activity1 becomes state1",
+          "tag": "CE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "maximum number of times activity1 becomes state1",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "maximum",
+          "tag": "AGR",
+          "type:": "slot"
+        },
+        {
+          "text": "number of times",
+          "tag": "CMI"
+        },
+        {
+          "text": "activity1 becomes state1",
+          "tag": "CE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "minimum number of times activity1 becomes state1",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "minimum",
+          "tag": "AGR",
+          "type:": "slot"
+        },
+        {
+          "text": "number of times",
+          "tag": "CMI"
+        },
+        {
+          "text": "activity1 becomes state1",
+          "tag": "CE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "maximal number of times activity1 becomes state1",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "maximal",
+          "tag": "AGR",
+          "type:": "slot"
+        },
+        {
+          "text": "number of times",
+          "tag": "CMI"
+        },
+        {
+          "text": "activity1 becomes state1",
+          "tag": "CE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "Average real time from opening to resolution of the incident",
+      "type": "time",
+      "annotation": [
+        {
+          "text": "Average",
+          "tag": "AGR",
+          "type:": "slot"
+        },
+        {
+          "text": "real time",
+          "tag": "TMI"
+        },
+        {
+          "text": "from",
+          "tag": "TSI"
+        },
+        {
+          "text": "opening",
+          "tag": "TSE",
+          "type:": "slot"
+        },
+        {
+          "text": "to",
+          "tag": "TEI"
+        },
+        {
+          "text": "resolution of the incident",
+          "tag": "TEE",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "Average time of an order grouped by customer",
+      "type": "time",
+      "annotation": [
+        {
+          "text": "Average",
+          "tag": "AGR"
+        },
+        {
+          "text": "time of",
+          "tag": "TMI"
+        },
+        {
+          "text": "an order",
+          "tag": "TBE",
+          "type:": "slot"
+        },
+        {
+          "text": "grouped by",
+          "tag": "GBI"
+        },
+        {
+          "text": "customer",
+          "tag": "GBC",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "Average time of an order grouped per customer",
+      "type": "time",
+      "annotation": [
+        {
+          "text": "Average",
+          "tag": "AGR"
+        },
+        {
+          "text": "time of",
+          "tag": "TMI"
+        },
+        {
+          "text": "an order",
+          "tag": "TBE",
+          "type:": "slot"
+        },
+        {
+          "text": "grouped per",
+          "tag": "GBI"
+        },
+        {
+          "text": "customer",
+          "tag": "GBC",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "Total number of incidents grouped by priority",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "Total",
+          "tag": "AGR"
+        },
+        {
+          "text": "number of",
+          "tag": "CMI"
+        },
+        {
+          "text": "incidents",
+          "tag": "CE"
+        },
+        {
+          "text": "grouped by",
+          "tag": "GBI"
+        },
+        {
+          "text": "priority",
+          "tag": "GBC",
+          "type:": "slot"
+        }
+      ]
+    },
+    {
+      "description": "Total number of incidents grouped per customer",
+      "type": "count",
+      "annotation": [
+        {
+          "text": "Total",
+          "tag": "AGR"
+        },
+        {
+          "text": "number of",
+          "tag": "CMI"
+        },
+        {
+          "text": "incidents",
+          "tag": "CE"
+        },
+        {
+          "text": "grouped per",
+          "tag": "GBI"
+        },
+        {
+          "text": "customer",
+          "tag": "GBC",
+          "type:": "slot"
+        }
+      ]
+    }
+  ]
+}
