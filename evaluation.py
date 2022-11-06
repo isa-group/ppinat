@@ -19,7 +19,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-v", "--verbosity",
                     help="If this option is activated, you will be able to view the complete information in a CSV file called input_test_info.csv", action="store_true")
 
-one_slot_weights = {
+""" one_slot_weights = {
     "emb_is": {
         'slot_is_sim': 0.25,
         'slot_complete_is_sim': 0.2,
@@ -90,9 +90,9 @@ one_slot_weights = {
         'att_complete_is_sim': 0.05
     }
 
-}
+} """
 
-multi_slot_weights = {
+""" multi_slot_weights = {
     "emb_is": {
         'ev1_$slot_is_sim': 0.05,
         "ev1_$slot_complete_is_sim": 0.05,
@@ -230,7 +230,7 @@ multi_slot_weights = {
         "ev2_$att_complete_is_sim": 0.01,
         "same_type": 0.25,
     }
-}
+} """
 # filename = "metrics_dataset-domesticDeclarations"
 #filename = "metrics_dataset-traffic-test"
 # filename = "metrics_dataset"
@@ -251,14 +251,15 @@ for dataset in datasets:
     results = []
     ppi_results = []
     for parsing_model in parsing:
+        matching_single_name = list(dict(matching["single"]).keys())[0]
         other = {
             "weights": {
-                "one_slot": one_slot_weights[matching["single"]],
-                "multi_slot": multi_slot_weights[matching["multiple"]]
+                "one_slot":  list(dict(matching["single"]).values())[0],
+                "multi_slot": list(dict(matching["multiple"]).values())[0]
             }
         }
 
-        print("---------- " + matching["single"] + "----------")
+        print("---------- " + matching_single_name + "----------")
         test = input_test.InputTest(
             args=args, dataset=dataset, parsing_model=parsing_model, other=other)
 
@@ -267,7 +268,7 @@ for dataset in datasets:
         goldstandard = sum(test.goldstandard_atts.values())
 
         ppi_results.append({
-            "type": matching["single"],
+            "type": matching_single_name,
             "parsing": parsing_model,
             "good": test.ppi_results["good"],
             "regular": test.ppi_results["regular"],
@@ -277,7 +278,7 @@ for dataset in datasets:
 
         scores = compute_precision_recall(overall, identified, goldstandard)
         result = {
-            "type": matching["single"],
+            "type": matching_single_name,
             "parsing": parsing_model,
             "attrib": "global",
             "regular": False,
@@ -293,7 +294,7 @@ for dataset in datasets:
             scores = compute_precision_recall(
                 test.attribute_results[t], test.identified_atts[t], test.goldstandard_atts[t])
             result = {
-                "type": matching["single"],
+                "type": matching_single_name,
                 "parsing": parsing_model,
                 "attrib": t,
                 "regular": False,
@@ -309,7 +310,7 @@ for dataset in datasets:
         scores = compute_precision_recall(
             overall, identified, goldstandard, allow_regular=True)
         result = {
-            "type": matching["single"],
+            "type": matching_single_name,
             "parsing": parsing_model,
             "attrib": "global",
             "regular": True,
@@ -325,7 +326,7 @@ for dataset in datasets:
             scores = compute_precision_recall(
                 test.attribute_results[t], test.identified_atts[t], test.goldstandard_atts[t], allow_regular=True)
             result = {
-                "type": matching["single"],
+                "type": matching_single_name,
                 "parsing": parsing_model,
                 "attrib": t,
                 "regular": True,

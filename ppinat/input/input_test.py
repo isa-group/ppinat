@@ -110,7 +110,7 @@ class InputTest:
                         elif m["type"] == "data":
                             self.analyse_metric(
                                 commands.DataMetricCommand(), SIMILARITY, m, d_name, args, columns_values)
-                    break
+                    
             if args.verbosity:
                 excel = pd.DataFrame(columns_values)
                 excel.to_csv("input/info.csv")
