@@ -4,10 +4,11 @@ import ssl
 import urllib
 from os import remove
 from os.path import exists
+from enum import Enum
 
 import pandas as pd
 import ppinat.bot.commands as commands
-import ppinat.bot.types as t
+import ppinat.bot.types as bottypes
 import ppinat.matcher.recognizers as r
 import spacy
 from colorama import Fore
@@ -18,45 +19,110 @@ from ppinat.ppiparser.transformer import load_transformer, load_general_transfor
 from ppinot4py.model import AppliesTo, RuntimeState, TimeInstantCondition
 from ppinat.models.gcloud import update_models
 
-def aggregate_results(attribute_results):
-    return {k: sum([attribute_results[att][k] for att in attribute_results]) for k in ['good', 'regular', 'bad']}
 
-def print_results(attribute_results, goldstandard, identified):
-    print(Fore.GREEN + "Good: " + str(attribute_results["good"]) + Fore.RESET)
-    print(Fore.YELLOW + "Regular: " +
-        str(attribute_results["regular"]) + Fore.RESET)
-    print(Fore.RED + "Bad: " + str(attribute_results["bad"]) + Fore.RESET)
+ATTRIBUTES = [
+    "from", "to", "when", "condition", "filter", "aggregation", "data"
+]
 
-    precision = attribute_results['good'] / identified if identified > 0 else -1
-    recall = attribute_results['good'] / goldstandard if goldstandard > 0 else -1
-    print(f"Precision: {precision} / Recall: {recall}")
+TAGS = [
+    "TSE", "TEE", "TBE", "CE", "AttributeName", "GBC", "FDE", "AGR", "CCI", "AttributeValue"
+]
 
+class EvalResult(Enum):
+    
+    OK1 = 1 # prediction and goldstandard have values and they match
+    OK2 = 2 # prediction and goldstandard have no values
+    NOK1 = 3 # prediction and goldstandard have values, but they don't match
+    NOK2 = 4 # prediction has value, but goldstandard doesn't
+    NOK3 = 5 # prediction has no value, but goldstandard does
+    P1 = 6 # prediction and goldstandard have values and they partially match
+
+    def is_ok(self):
+        return self == EvalResult.OK1 or self == EvalResult.OK2
+    def is_fail(self):
+        return self == EvalResult.NOK1 or self == EvalResult.NOK2 or self == EvalResult.NOK3
+
+
+class Evaluation:
+    def __init__(self, initial=None):
+        if initial is None:
+            self.value = {er: 0 for er in EvalResult}
+        else:
+            self.value = initial
+
+    def add(self, eval):
+        self.value = {er: self.value[er] + eval.value[er] for er in EvalResult}
+
+    def add_value(self, value):
+        self.value[value] += 1
+
+    def true_positive(self, strict=True):
+        if strict:
+            true_positive = self.value[EvalResult.OK1] 
+        else:
+            true_positive = self.value[EvalResult.OK1] + self.value[EvalResult.P1]
+        return true_positive
+
+    def false_positive(self, strict=True):
+        if strict:
+            false_positive = self.value[EvalResult.NOK1] + self.value[EvalResult.NOK2] + self.value[EvalResult.P1]
+        else:
+            false_positive = self.value[EvalResult.NOK1] + self.value[EvalResult.NOK2]
+        return false_positive
+
+    def false_negative(self):
+        return self.value[EvalResult.NOK3]
+
+    def precision(self, strict=True):
+        if self.true_positive(strict) == 0:
+            return 0
+
+        return float(self.true_positive(strict)) / float(self.true_positive(strict) + self.false_positive(strict))
+
+    def recall(self, strict=True):
+        if self.true_positive(strict) == 0:
+            return 0
+        return float(self.true_positive(strict)) / float(self.true_positive(strict) + self.false_negative())
 
 class InputTest:
     def __init__(self, args, other=None):
+        self.ppi_results = {
+            "good": 0,
+            "partial": 0,
+            "bad": 0,
+            "nothing": 0
+        }
+
+        self.tagging_overall = {
+            "good": 0,
+            "partial": 0,
+            "bad": 0
+        }
+        self.tagging_tag = {t: Evaluation() for t in TAGS}
+
+        self.matching_overall = {
+            "good": 0,
+            "partial": 0,
+            "bad": 0,
+            "parser_issue": 0
+        }
+        self.matching_attribute = {at: Evaluation() for at in ATTRIBUTES}
+
+        self.attribute_results = {k: {
+            'good': 0,
+            'partial': 0,
+            'bad': 0
+        } for k in ATTRIBUTES}
+
+        self.goldstandard_atts = {k: 0 for k in ATTRIBUTES}
+        self.identified_atts = {k: 0 for k in ATTRIBUTES}
+
         if not exists(args.filename):
             raise RuntimeError(
                 f"File provided does not exist: {args.filename}")
 
         with open(args.filename, "r") as j:
             data = json.load(j)
-            datasets = data["datasets"]
-            metrics = data["metrics"]
-
-            self.weights = other["weights"] if "weights" in other else None
-
-            self.ppi_results = {
-                "good": 0,
-                "regular": 0,
-                "bad": 0,
-                "nothing": 0
-            }
-
-            self.tagging_results = {
-                "good": 0,
-                "regular": 0,
-                "bad": 0
-            }
 
             self.seleted_model = args.model
             if self.seleted_model == 1:
@@ -64,491 +130,556 @@ class InputTest:
             else:
                 print("Using specific token classification model")
 
-            columns_values = []
+            table_summary = []
 
-            attributes = [
-                "from", "to", "when", "condition", "filter", "aggregation", "data"
-            ]
-
-            self.attribute_results = {k: {
-                'good': 0,
-                'regular': 0,
-                'bad': 0
-            } for k in attributes}
-
-            self.goldstandard_atts = {k: 0 for k in attributes}
-            self.identified_atts = {k: 0 for k in attributes}
-
+            datasets = data["datasets"]
             for d_name in datasets:
                 print(Fore.WHITE + "Loading dataset: " + d_name + Fore.RESET)
-                d = datasets[d_name]
-                if "url" in d and not exists(d["file"]):
-                    ssl._create_default_https_context = ssl._create_unverified_context
-                    urllib.request.urlretrieve(d["url"], d["file"] + ".gz")
-                    self.decompress(d["file"] + ".gz")
+                log_file = load_dataset(datasets[d_name])
                 print(Fore.GREEN + "Loaded" + Fore.RESET)
 
-                print(Fore.WHITE + "Analysing metrics..." + Fore.RESET)
-                SIMILARITY = self.similarity_charge(d["file"])
-                for m in metrics:
-                    if m["dataset"] == d_name or d_name in m["dataset"]:
-                        if m["type"] == "time":
-                            self.analyse_metric(
-                                commands.TimeMetricCommand(), SIMILARITY, m, d_name, args, columns_values)
-                        elif m["type"] == "count":
-                            self.analyse_metric(
-                                commands.CountMetricCommand(), SIMILARITY, m, d_name, args, columns_values)
-                        elif m["type"] == "data":
-                            self.analyse_metric(
-                                commands.DataMetricCommand(), SIMILARITY, m, d_name, args, columns_values)
+                print(Fore.WHITE + "Loading similarity computer: " + Fore.RESET)
+                weights = other["weights"] if "weights" in other else None
+                SIMILARITY = load_similarity(log_file, self.seleted_model, weights)
+                print(Fore.GREEN + "Loaded" + Fore.RESET)
 
-            if args.verbosity:
-                excel = pd.DataFrame(columns_values)
-                excel.to_csv("input/info.csv")
-#                excel.to_excel("input/input_test_info.xlsx")
+                print(Fore.WHITE + "Analyzing metrics..." + Fore.RESET)
+                metrics = data["metrics"]
+                for m in filter(lambda x: (x["dataset"] == d_name or d_name in x["dataset"]) and ("goldstandard" in x and d_name in x["goldstandard"]), metrics):
+                    result = None
 
-            print(Fore.YELLOW + "-------------GENERAL INFO-------------" + Fore.RESET)
-            print("Threshold 'a': " + str(t.BaseMetric.threshold_a) +
-                  "\n" + "Threshold 'b': " + str(t.BaseMetric.threshold_b))
+                    print(f"{Fore.BLUE}Metric -----> {m['description']}{Fore.RESET}")
+                    recognized_entity = r.RecognizedEntities(None, m["description"])
 
-            print("Parsing results:")
-            print(Fore.GREEN + "Good: " + str(self.tagging_results["good"]) + Fore.RESET)
-            print(Fore.YELLOW + "Regular: " +
-                  str(self.tagging_results["regular"]) + Fore.RESET)
-            print(Fore.RED + "Bad: " + str(self.tagging_results["bad"]) + Fore.RESET)
+                    annotation = self.evaluate_parser(SIMILARITY, recognized_entity, m["slots"])
+                    result = self.evaluate_matcher(SIMILARITY, recognized_entity, annotation, m["goldstandard"][d_name])
+                    
+                    # if args.verbosity and result is not None:
+                    #     extract_summary(SIMILARITY, m, table_summary, result)
 
-            print("Metric results:")
-            print(Fore.GREEN + "Good: " + str(self.ppi_results["good"]) + Fore.RESET)
-            print(Fore.YELLOW + "Regular: " +
-                  str(self.ppi_results["regular"]) + Fore.RESET)
-            print(Fore.RED + "Bad: " + str(self.ppi_results["bad"]) + Fore.RESET)
-            print("Nothing: " + str(self.ppi_results["nothing"]))
-
-            overall_results = aggregate_results(self.attribute_results)
-            print("Attribute results:")
-            print_results(overall_results, sum(self.goldstandard_atts.values()), sum(self.identified_atts.values()))
-            for att in attributes:
-                print(f"Attribute {att} results:")
-                print_results(self.attribute_results[att], self.goldstandard_atts[att], self.identified_atts[att])
+                    print()
 
 
-    def comparing_attributes(self, attribute, attribute_result):
-        comparison = False
+            # if args.verbosity:
+            #     excel = pd.DataFrame(table_summary)
+            #     excel.to_csv("input/info.csv")
 
-        if "attribute" in attribute:
-            if attribute["attribute"] == attribute_result.value:
-                comparison = True
+            print(f"{Fore.YELLOW}-------------GENERAL INFO-------------{Fore.RESET}")
+            print(f"Threshold 'a': {str(bottypes.BaseMetric.threshold_a)}")
+            print(f"Threshold 'b': {str(bottypes.BaseMetric.threshold_b)}")
 
-        return comparison        
+            print_results_summary("Parsing results summary", self.tagging_overall)
+            tagging_aggregation = aggregate_eval_results(self.tagging_tag)
+            print_evaluation(tagging_aggregation)
+            for t in self.tagging_tag:
+                print(f"-- Tag {t}")
+                print_evaluation(self.tagging_tag[t])
 
-    def comparing_conditions(self, condition, condition_result):
-        comparison = False
+            print_results_summary("Matching results summary", self.matching_overall)
+            matching_aggregation = aggregate_eval_results(self.matching_attribute)
+            print_evaluation(matching_aggregation)
+            for t in self.matching_attribute:
+                print(f"-- Attribute {t}")
+                print_evaluation(self.matching_attribute[t])
 
-        if "attribute" in condition and "value" in condition and "operator" in condition:
-            condition_string = str(condition_result)
-            if condition["operator"] in condition_string \
-                    and condition["value"].lower() in condition_string.lower() \
-                    and condition["attribute"] in condition_string:
-                comparison = True
-        elif "case" in condition:
-            if isinstance(condition_result, TimeInstantCondition) \
-                    and condition_result.applies_to == AppliesTo.PROCESS:
-                if condition["case"] == "begin" and condition_result.changes_to_state == RuntimeState.START:
-                    comparison = True
-                elif condition["case"] == "end" and condition_result.changes_to_state == RuntimeState.END:
-                    comparison = True
-
-        return comparison
-
-    def show_time_results(self, c1, c2, p1, p2, all1, all2):
-        text = None
-        if c1 and c2:
-            text = f"Matched from ({p1} / {len(all1)}) and to ({p2} / {len(all2)}) condition"
-            if p1 == 0 and p2 == 0:
-                matching_color = Fore.GREEN
-            else:
-                matching_color = Fore.YELLOW
-
-            print(matching_color + text + Fore.RESET)
-        elif c1:
-            text = f"Matched only from ({p1} / {len(all1)}) condition [to total {len(all2)}]"
-            print(Fore.YELLOW + text + Fore.RESET)
-        elif c2:
-            text = f"Matched only to ({p2} / {len(all2)}) condition [from total {len(all1)}]"
-            print(Fore.YELLOW + text + Fore.RESET)
-        else:
-            text = f"Not matched from and to condition [from total {len(all1)} / to total {len(all2)}]"
-            print(Fore.RED + text + Fore.RESET)
-
-        print("Values found for from:")
-        for i, v in enumerate(all1):
-            if c1 and i == p1:
-                text = Fore.GREEN + str(v.value)
-            else:
-                text = str(v.value)
-
-            print(text + Fore.RESET)
-
-        print("Values found for to:")
-        for i, v in enumerate(all2):
-            if c2 and i == p2:
-                text = Fore.GREEN + str(v.value)
-            else:
-                text = str(v.value)
-
-            print(text + Fore.RESET)
-
-        return text
-
-    def show_results(self, label, c, p, all):
-        text = None
-        if c:
-            if p == 0:
-                matching_color = Fore.GREEN
-                mode = "good"
-            else:
-                matching_color = Fore.YELLOW
-                mode = "regular"
-
-            text = f"Matched {label} ({p} / {len(all)})"
-            print(matching_color + text + Fore.RESET)
-        else:
-            text = f"Not matched {label} [total {len(all)}]"
-            print(Fore.RED + text + Fore.RESET)
-
-        print(f"values found for {label}:")
-        for i, v in enumerate(all):
-            if c and i == p:
-                text = Fore.GREEN + str(v.value)
-            else:
-                text = str(v.value)
-
-            print(text + Fore.RESET)
-
-        return text
-
-    def show_condition_results(self, associated_condition, results):
-        if associated_condition:
-            matching_color = Fore.GREEN
-            text = f"Matched condition"            
-        else:
-            matching_color = Fore.RED
-            if results is None:
-                text = f"Not matched condition"
-            else:
-                text = f"Wrongly matched conditions: {results.op} {results.value.value}"
-
-        print(matching_color + text + Fore.RESET)
-
-
-    def param_eval(self, goldstandard, command, command_param):
-        if command_param in command.values:
-            values_list = [command.values[command_param]]
-        else:
-            values_list = command.alt_match_a[command_param] if command_param in command.alt_match_a else [] + \
-                command.alt_match_b[command_param] if command_param in command.alt_match_b else [
-            ]
-
-        matching_value = False
-        position_value = 0
-
-        for i, v in enumerate(values_list):
-            eval_result = v.value
-
-            matching_value = goldstandard(eval_result)
-            if matching_value:
-                position_value = i
-                break
-
-        if matching_value:
-            if position_value == 0:
-                output = 'good'
-            else:
-                output = 'regular'
-        else:
-            output = 'bad'
+    def evaluate_matcher(self, similarity, recognized_entity, annotation, goldstandard):
+        if goldstandard["type"] == annotation.get_measure_type():
+            if goldstandard["type"] == "time":
+                metric_result = self.analyse_metric(
+                    commands.TimeMetricCommand(), recognized_entity, similarity, goldstandard)
+            elif goldstandard["type"] == "count":
+                metric_result = self.analyse_metric(
+                    commands.CountMetricCommand(), recognized_entity, similarity, goldstandard)
+            elif goldstandard["type"] == "data":
+                metric_result = self.analyse_metric(
+                    commands.DataMetricCommand(), recognized_entity, similarity, goldstandard)
         
+            agg_result = self.aggregation_eval(recognized_entity, similarity, goldstandard)
 
-        return {'match': matching_value, 'pos': position_value, 'output': output, 'values': values_list}
-
-
-    def analyse_metric(self, command, similarity, metric, dataset_name, args, columns_values):
-        recognized_entity = r.RecognizedEntities(None, metric["description"])
-        
-        try:
-            command.match_entities(recognized_entity, similarity)
-        except:
-            return
-
-        annotation: PPIAnnotation = similarity.metric_decoder(recognized_entity.text)
-
-        print(Fore.BLUE + "Metric -----> " + metric["description"] + Fore.RESET)
-
-        from_text = text_by_tag(annotation, "TSE")
-        to_text = text_by_tag(annotation, "TEE")
-        only_text = text_by_tag(annotation, "TBE")
-        when_text = text_by_tag(annotation, "CE")
-        data_attribute = text_by_tag(annotation, "AttributeName")
-        group_text = text_by_tag(annotation, 'GBC')
-        denominator_text = text_by_tag(annotation, 'FDE')
-        aggregation_text = annotation.get_aggregation_function()
-        conditional_text = text_by_tag(annotation, 'CCI')
-        conditional_attr_text = text_by_tag(annotation, 'AttributeValue')
-
-        tags = {
-            "TSE": from_text,
-            "TEE": to_text,
-            "TBE": only_text,
-            "CE": when_text,
-            "AttributeName": data_attribute,
-            "GBC": group_text,
-            "FDE": denominator_text,
-            "AGR": aggregation_text,
-            "CCI": conditional_text,
-            "AttributeValue": conditional_attr_text
-        }
-
-        good_tags = 0
-        bad_tags = 0
-        
-        for tag in metric["slots"].keys():
-            if metric["slots"][tag] == tags[tag]:
-                good_tags += 1
-            else:
-                bad_tags += 1
-                print(f"Correct slot for {tag} is '{metric['slots'][tag]}' but found '{tags[tag]}'")
-        
-        if good_tags == 0:
-            self.tagging_results["bad"] += 1
-            print(f"{Fore.RED}Bad tagged{Fore.RESET}")
-        elif good_tags >= 1 and bad_tags >= 1:
-            self.tagging_results["regular"] += 1
-            print(f"{Fore.YELLOW}{good_tags}/{good_tags + bad_tags} slots have been tagged well{Fore.RESET}")
-        else:
-            self.tagging_results["good"] += 1
-            print(f"{Fore.GREEN}All slots have been tagged well{Fore.RESET}")
-        
-        result = None
-        if("goldstandard" in metric and dataset_name in metric["goldstandard"]):
-            goldstandard = metric["goldstandard"][dataset_name]
-            if metric["type"] == "time":
-                from_condition = goldstandard["from_condition"]
-                to_condition = goldstandard["to_condition"]
-
-                from_eval = self.param_eval(lambda x: self.comparing_conditions(from_condition, x), command, "from_cond")
-                to_eval = self.param_eval(lambda x: self.comparing_conditions(to_condition, x), command, "to_cond")
-
-                self.attribute_results['from'][from_eval['output']] += 1
-                self.attribute_results['to'][to_eval['output']] += 1
-                self.goldstandard_atts['from'] += 1
-                self.goldstandard_atts['to'] += 1
-                if len(from_eval['values']) > 0:
-                    self.identified_atts['from'] += 1
-                if len(to_eval['values']) > 0:
-                    self.identified_atts['to'] += 1
-
-                self.show_time_results(
-                    from_eval['match'], to_eval['match'], from_eval['pos'], to_eval['pos'], from_eval['values'], to_eval['values'])
-
-                cond = self.condition_eval(goldstandard, command)
-                if cond is not None:
-                    self.attribute_results['condition'][cond] += 1
-
-                if from_eval['output'] == 'good' and to_eval['output'] == 'good' and (cond is None or cond == 'good'):
-                    result = 'good'
-                elif from_eval['output'] == 'bad' or to_eval['output'] == 'bad' or (cond == 'bad'):
-                    result = 'bad'
-                else:
-                    result = 'regular'
-
-
-            elif metric["type"] == "count":
-                condition = goldstandard["count_condition"]
-
-                when_eval = self.param_eval(lambda x: self.comparing_conditions(condition, x), command, "when")
-                self.attribute_results['when'][when_eval['output']] += 1
-                self.goldstandard_atts['when'] += 1
-                if len(when_eval['values']) > 0:
-                    self.identified_atts['when'] += 1
-
-                self.show_results("when condition",
-                    when_eval['match'], when_eval['pos'], when_eval['values'])
-
-                cond = self.condition_eval(goldstandard, command)
-                if cond is not None:
-                    self.attribute_results['condition'][cond] += 1
-
-                if when_eval['output'] == 'good' and (cond is None or cond == 'good'):
-                    result = 'good'
-                elif when_eval['output'] == 'bad' or (cond == 'bad'):
-                    result = 'bad'
-                else:
-                    result = 'regular'
-
-
-            elif metric["type"] == "data":
-                condition = goldstandard["data_condition"]
-
-                data_eval = self.param_eval(lambda x: self.comparing_attribute(condition, x), command, "attribute")
-                self.attribute_results['data'][data_eval['output']] += 1
-                self.goldstandard_atts['data'] += 1
-                if len(data_eval['values']) > 0:
-                    self.identified_atts['data'] += 1
-
-                self.show_results("data attribute",
-                    data_eval['match'], data_eval['pos'], data_eval['values'])
-
-                cond = self.condition_eval(goldstandard, command)
-                if cond is not None:
-                    self.attribute_results['condition'][cond] += 1
-
-                if data_eval['output'] == 'good' and (cond is None or cond == 'good'):
-                    result = 'good'
-                elif data_eval['output'] == 'bad' or (cond == 'bad'):
-                    result = 'bad'
-                else:
-                    result = 'regular'
-
-
-            if annotation.get_aggregation_function() is not None:
-                agg_command = commands.ComputeMetricCommand()
-                agg_command.match_entities(recognized_entity, similarity)
-
-                if "aggregation" in goldstandard:
-                    self.goldstandard_atts['aggregation'] += 1
-
-                    agg_eval = self.param_eval(lambda x: x == goldstandard['aggregation'], agg_command, "agg_function")
-                    self.attribute_results['aggregation'][agg_eval['output']] += 1
-                    if len(agg_eval['values']) > 0:
-                        self.identified_atts['aggregation'] += 1
-                    self.show_results("aggregation", agg_eval['match'], agg_eval['pos'], agg_eval['values'])
-
-                    filter_eval = None
-                    if "filter" in goldstandard:
-                        self.goldstandard_atts["filter"] += 1
-                        filter_eval = self.param_eval(lambda x: self.comparing_conditions(goldstandard["filter"], x), command, "denominator")
-                        self.attribute_results['filter'][filter_eval['output']] += 1
-                        if len(filter_eval['values']) > 0:
-                            self.identified_atts['filter'] += 1
-                        self.show_results("filter", filter_eval['match'], filter_eval['pos'], filter_eval['values'])
-
-                    if result == 'good' and agg_eval['output'] == 'good' and (filter_eval is None or cond == 'good'):
-                        result = 'good'
-                    elif result == 'bad' or agg_eval['output'] == 'bad' or (filter_eval == 'bad'):
-                        result = 'bad'
-                    else:
-                        result = 'regular'
-                else:
-                    self.identified_atts["aggregation"] += 1
-                    if any(["denominator" in x for x in [agg_command.values, agg_command.alt_match_a, agg_command.alt_match_b]]):
-                        self.identified_atts["filter"] += 1
-
-                    result = 'bad'
-            else:
-                if "aggregation" in goldstandard:
-                    self.goldstandard_atts["aggregation"] += 1
-                    if "filter" in goldstandard:
-                        self.goldstandard_atts["filter"] += 1
-
-            self.ppi_results[result] += 1
-
-        else:
-            result = "There are no defined conditions. Execution result:"
-            print(Fore.YELLOW + result + Fore.RESET)
-            print(command)
-            self.ppi_results["nothing"] = self.ppi_results["nothing"] + 1
-
-        self.extract_excel(args, similarity, metric, columns_values, result)
-        print()
-
-    def condition_eval(self, goldstandard, command):
-        result = None
-        comparison_associated = False
-        if "conditional_metric" in command.values:
-            self.identified_atts['condition'] += 1
-
-        if "condition" in goldstandard:
-            self.goldstandard_atts['condition'] += 1
-            associated_condition = goldstandard["condition"]
-            if "conditional_metric" in command.values:
-                associated_condition_result = command.values["conditional_metric"]
-            else:
-                associated_condition_result = None
-
-            if "operator" in associated_condition and "value" in associated_condition:
-                if associated_condition_result:
-                    if associated_condition["operator"] == associated_condition_result.op \
-                            and associated_condition["value"] == str(associated_condition_result.value.value):
-                        comparison_associated = True
-
-            if comparison_associated:
+            if metric_result == 'good' and agg_result == 'good':
                 result = 'good'
+            elif metric_result == 'bad' and agg_result == 'bad':
+                result = 'bad'
             else:
-                result = "bad"
+                result = 'partial'
+        else:
+            result = 'parser_issue'
+            print(f"{Fore.RED}Matching skipped because measure type didn't match. Found <{annotation.get_measure_type()}>, expected <{goldstandard['type']}>{Fore.RESET}")
 
-            self.show_condition_results(comparison_associated, associated_condition_result)
+        self.matching_overall[result] += 1
 
         return result
 
+    def evaluate_parser(self, similarity, recognized_entity, slots):
+        annotation: PPIAnnotation = similarity.metric_decoder(recognized_entity.text)
 
-    def extract_excel(self, args, similarity, metric, columns_values, result):
-        if args.verbosity:
-            for slot in similarity.slot_information:
-                slots = slot.split(", ")
-                if len(slots) == 2:
-                    slot1 = slots[0]
-                    slot2 = slots[1]
-                else:
-                    slot1 = slots[0]
-                    slot2 = None
-                values = {"metric": metric["description"],
-                          "type": metric["type"],
-                          "dataset": metric["dataset"],
-                          "result": result,
-                          "slot1": slot1,
-                          "slot2": slot2}
+        parser_metric_result, parser_tag_result, parser_errors = evaluate_parser_metric(annotation, slots = slots)
+        print_parser_results(parser_metric_result, parser_tag_result, parser_errors)
 
-                for score in similarity.slot_information[slot]:
-                    values[score] = similarity.slot_information[slot][score]
+        self.tagging_overall[parser_metric_result] += 1
+        for t in TAGS:
+            self.tagging_tag[t].add_value(parser_tag_result[t])
 
-                columns_values.append(values)
-                # for v in values:
-                #    columns_values[v].append(values[v])
+        return annotation
 
-    def similarity_charge(self, log):
-        NLP = spacy.load('en_core_web_lg')
-        LOG = load_log(log, id_case="ID", time_column="DATE",
-                    activity_column="ACTIVITY")
 
-        if self.seleted_model == 1:
-            TOKEN_CLASSIFIER = './ppinat/models/GeneralClassifier'
-            TRANSFORMER = load_general_transformer(TOKEN_CLASSIFIER)
-            
-        else:
-            update_models()
-            TEXT_CLASSIFIER = './ppinat/models/TextClassification'
-            TIME_MODEL = './ppinat/models/TimeModel'
-            COUNT_MODEL = './ppinat/models/CountModel'
-            DATA_MODEL = './ppinat/models/DataModel'
-            TRANSFORMER = load_transformer(TEXT_CLASSIFIER, TIME_MODEL, COUNT_MODEL, DATA_MODEL)
-
-        SIMILARITY = SimilarityComputer(LOG, NLP, metric_decoder=TRANSFORMER, weights = self.weights)
-        return SIMILARITY
-
-    def decompress(self, filename):
-        f = gzip.open(filename)
-        self.write_file(filename[:filename.rfind(".gz")], f.read())
-        f.close()
-        remove(filename)
-
-    def write_file(self, filename, data):
+    def analyse_metric(self, command, recognized_entity, similarity, goldstandard):        
         try:
-            f = open(filename, "wb")
-        except IOError as e:
-            print(e.errno, e.message)
+            command.match_entities(recognized_entity, similarity)
+        except:
+            print(Fore.RED + "An error ocurred while matching entities" + Fore.RESET)
+            return None
+
+        matcher_metric_result = None
+        if goldstandard["type"] == "time":
+            matcher_metric_result = self.time_metric_eval(command, goldstandard)
+
+        elif goldstandard["type"] == "count":
+            matcher_metric_result = self.count_metric_eval(command, goldstandard)
+
+        elif goldstandard["type"] == "data":
+            matcher_metric_result = self.data_metric_eval(command, goldstandard)
+
+        return matcher_metric_result
+
+    def aggregation_eval(self, recognized_entity, similarity, goldstandard):
+        aggregation_result = None
+        filter_result = None
+
+        agg_command = commands.ComputeMetricCommand()
+        agg_command.match_entities(recognized_entity, similarity)
+
+        agg_eval_func = (lambda x: x == goldstandard['aggregation']) if 'aggregation' in goldstandard else None
+        agg_result, agg_pos, agg_found = param_eval(agg_eval_func, agg_command, "agg_function")
+        print_results("aggregation", agg_pos, agg_found)
+        self.matching_attribute["aggregation"].add_value(agg_result)
+
+        filter_eval_func = (lambda x: comparing_conditions(goldstandard["filter"], x)) if "filter" in goldstandard else None
+        filter_result, filter_pos, filter_found = param_eval(filter_eval_func, agg_command, "denominator")
+        print_results("filter", filter_pos, filter_found)
+        self.matching_attribute["filter"].add_value(filter_result)
+
+        if agg_result.is_ok() and filter_result.is_ok():
+            aggregation_result = 'good'
+        elif agg_result.is_fail() or filter_result.is_fail():
+            aggregation_result = 'bad'
         else:
-            f.write(data)
-            f.close()
+            aggregation_result = 'partial'
+
+        return aggregation_result
+
+    def data_metric_eval(self, command, goldstandard):
+        data_result, data_pos, data_found = param_eval(lambda x: comparing_attributes(goldstandard["data_condition"], x), command, "attribute")
+        print_results("data attribute", data_pos, data_found)
+        self.matching_attribute["data"].add_value(data_result)
+
+        cond_result, cond_expected, cond_found = condition_eval(goldstandard, command)
+        print_condition_results(cond_result, cond_expected, cond_found)
+        self.matching_attribute['condition'].add_value(cond_result)
+
+        if data_result.is_ok() and cond_result.is_ok():
+            matcher_metric_result = 'good'
+        elif data_result.is_fail() or cond_result.is_fail():
+            matcher_metric_result = 'bad'
+        else:
+            matcher_metric_result = 'partial'
+
+        return matcher_metric_result
+
+    def count_metric_eval(self, command, goldstandard):
+        when_result, when_pos, when_found = param_eval(lambda x: comparing_conditions(goldstandard["count_condition"], x), command, "when")
+        print_results("when condition", when_pos, when_found)
+        self.matching_attribute['when'].add_value(when_result)
+
+        cond_result, cond_expected, cond_found = condition_eval(goldstandard, command)
+        print_condition_results(cond_result, cond_expected, cond_found)
+        self.matching_attribute['condition'].add_value(cond_result)
+
+        if when_result.is_ok() and cond_result.is_ok():
+            matcher_metric_result = 'good'
+        elif when_result.is_fail() or cond_result.is_fail():
+            matcher_metric_result = 'bad'
+        else:
+            matcher_metric_result = 'partial'
+        
+        return matcher_metric_result
+
+    def time_metric_eval(self, command, goldstandard):
+        from_result, from_eval_pos, from_found = param_eval(lambda x: comparing_conditions(goldstandard["from_condition"], x), command, "from_cond")
+        to_result, to_eval_pos, to_found = param_eval(lambda x: comparing_conditions(goldstandard["to_condition"], x), command, "to_cond")
+        #print_time_results(from_eval_pos, to_eval_pos, from_found, to_found)
+        print_results("from", from_eval_pos, from_found)
+        print_results("to", to_eval_pos, to_found)
+
+        self.matching_attribute['from'].add_value(from_result)
+        self.matching_attribute['to'].add_value(to_result)
+
+        cond_result, cond_expected, cond_found = condition_eval(goldstandard, command)
+        print_condition_results(cond_result, cond_expected, cond_found)
+        self.matching_attribute['condition'].add_value(cond_result)
+        
+        if from_result.is_ok() and to_result.is_ok() and cond_result.is_ok():
+            matcher_metric_result = 'good'
+        elif from_result.is_fail() or to_result.is_fail() or cond_result.is_fail():
+            matcher_metric_result = 'bad'
+        else:
+            matcher_metric_result = 'partial'
+
+        return matcher_metric_result
+
+
+def print_results_summary(title, overall):
+    print(f"{title}:")
+    print(f"{Fore.GREEN}Good: {str(overall['good'])}{Fore.RESET}")
+    print(f"{Fore.YELLOW}Partial: {str(overall['partial'])}{Fore.RESET}")
+    print(f"{Fore.RED}Bad: {str(overall['bad'])}{Fore.RESET}")
+    if "parser_issue" in overall:
+        print(f"{Fore.RED}Bad: {str(overall['parser_issue'])}{Fore.RESET}")
+
+def print_evaluation(evaluation):
+    print(f"OK1: {evaluation.value[EvalResult.OK1]} (prediction and goldstandard have values and they match)")
+    print(f"OK2: {evaluation.value[EvalResult.OK2]} (prediction and goldstandard have no values)")
+    print(f"P1: {evaluation.value[EvalResult.P1]} (prediction and goldstandard have values and they partially match)")
+    print(f"NOK1: {evaluation.value[EvalResult.NOK1]} (prediction and goldstandard have values, but they don't match)")
+    print(f"NOK2: {evaluation.value[EvalResult.NOK2]} (prediction has value, but goldstandard doesn't)")
+    print(f"NOK3: {evaluation.value[EvalResult.NOK3]} (prediction has no value, but goldstandard does)")
+    print(f"Precision: {evaluation.precision()} / Recall: {evaluation.recall()}")
+    print(f"Precision: {evaluation.precision(strict=False)} / Recall: {evaluation.recall(strict=False)} [Allows partial]")
+
+
+
+def extract_summary(similarity, metric, columns_values, result):
+    for slot in similarity.slot_information:
+        slots = slot.split(", ")
+        if len(slots) == 2:
+            slot1 = slots[0]
+            slot2 = slots[1]
+        else:
+            slot1 = slots[0]
+            slot2 = None
+        values = {"metric": metric["description"],
+                    "type": metric["type"],
+                    "dataset": metric["dataset"],
+                    "result": result,
+                    "slot1": slot1,
+                    "slot2": slot2}
+
+        for score in similarity.slot_information[slot]:
+            values[score] = similarity.slot_information[slot][score]
+
+        columns_values.append(values)
+        # for v in values:
+        #    columns_values[v].append(values[v])
+
+
+def aggregate_eval_results(results):
+    return Evaluation({er: sum([results[k].value[er] for k in results]) for er in EvalResult})
+
+
+def load_dataset(d):    
+    if "url" in d and not exists(d["file"]):
+        ssl._create_default_https_context = ssl._create_unverified_context
+        urllib.request.urlretrieve(d["url"], d["file"] + ".gz")
+        decompress(d["file"] + ".gz")
+    return d["file"]
+
+def decompress(filename):
+    f = gzip.open(filename)
+    write_file(filename[:filename.rfind(".gz")], f.read())
+    f.close()
+    remove(filename)
+
+def write_file(filename, data):
+    try:
+        f = open(filename, "wb")
+    except IOError as e:
+        print(e.errno, e.message)
+    else:
+        f.write(data)
+        f.close()
+
+def load_similarity(log, selected_model, weights):
+    NLP = spacy.load('en_core_web_lg')
+    LOG = load_log(log, id_case="ID", time_column="DATE",
+                activity_column="ACTIVITY")
+
+    if selected_model == 1:
+        TOKEN_CLASSIFIER = './ppinat/models/GeneralClassifier'
+        TRANSFORMER = load_general_transformer(TOKEN_CLASSIFIER)
+        
+    else:
+        update_models()
+        TEXT_CLASSIFIER = './ppinat/models/TextClassification'
+        TIME_MODEL = './ppinat/models/TimeModel'
+        COUNT_MODEL = './ppinat/models/CountModel'
+        DATA_MODEL = './ppinat/models/DataModel'
+        TRANSFORMER = load_transformer(TEXT_CLASSIFIER, TIME_MODEL, COUNT_MODEL, DATA_MODEL)
+
+    SIMILARITY = SimilarityComputer(LOG, NLP, metric_decoder=TRANSFORMER, weights = weights)
+    return SIMILARITY
+
+def aggregate_results(attribute_results):
+    return {k: sum([attribute_results[att][k] for att in attribute_results]) for k in ['good', 'partial', 'bad']}
+
+def print_overall_results(attribute_results, goldstandard, identified):
+    print(Fore.GREEN + "Good: " + str(attribute_results["good"]) + Fore.RESET)
+    print(Fore.YELLOW + "partial: " +
+        str(attribute_results["partial"]) + Fore.RESET)
+    print(Fore.RED + "Bad: " + str(attribute_results["bad"]) + Fore.RESET)
+
+    precision = attribute_results['good'] / identified if identified > 0 else -1
+    recall = attribute_results['good'] / goldstandard if goldstandard > 0 else -1
+    print(f"Precision: {precision} / Recall: {recall}")
+
+
+def evaluate_parser_metric(annotation, slots):
+    from_text = text_by_tag(annotation, "TSE")
+    to_text = text_by_tag(annotation, "TEE")
+    only_text = text_by_tag(annotation, "TBE")
+    when_text = text_by_tag(annotation, "CE")
+    data_attribute = text_by_tag(annotation, "AttributeName")
+    group_text = text_by_tag(annotation, 'GBC')
+    denominator_text = text_by_tag(annotation, 'FDE')
+    aggregation_text = annotation.get_aggregation_function()
+    conditional_text = text_by_tag(annotation, 'CCI')
+    conditional_attr_text = text_by_tag(annotation, 'AttributeValue')
+
+    tags = {
+        "TSE": from_text,
+        "TEE": to_text,
+        "TBE": only_text,
+        "CE": when_text,
+        "AttributeName": data_attribute,
+        "GBC": group_text,
+        "FDE": denominator_text,
+        "AGR": aggregation_text,
+        "CCI": conditional_text,
+        "AttributeValue": conditional_attr_text
+    }
+
+    tag_result = {}
+    errors = []
+
+    for tag in TAGS:
+        if tag in slots:
+            if slots[tag] == tags[tag]:
+                tag_result[tag] = EvalResult.OK1
+            elif tags[tag] is None:
+                tag_result[tag] = EvalResult.NOK3
+            else:
+                tag_result[tag] = EvalResult.NOK1
+        else:
+            if tags[tag] is None:
+                tag_result[tag] = EvalResult.OK2
+            else:
+                tag_result[tag] = EvalResult.NOK2
+
+        if not tag_result[tag].is_ok():            
+            errors.append((tag, slots[tag] if tag in slots else None, tags[tag]))
+
+    is_ok = [tag_result[t] == EvalResult.OK1 for t in tag_result]
+
+    if not errors:
+        metric_result = 'good'
+    elif any(is_ok):
+        metric_result = 'partial'
+    else:
+        metric_result = 'bad'
+
+    return metric_result, tag_result, errors
+    
+def print_parser_results(parser_metric_result, parser_tag_result, parser_errors):
+    if parser_metric_result == 'good':
+        print(f"{Fore.GREEN}All slots have been tagged well{Fore.RESET}")
+    elif parser_metric_result == 'partial':
+        result_types = [parser_tag_result[t] for t in parser_tag_result]
+        print(f"{Fore.YELLOW}{result_types.count(EvalResult.OK1)}/{len(result_types) - result_types.count(EvalResult.OK2)} slots have been tagged well{Fore.RESET}")
+    else:
+        print(f"{Fore.RED}Bad tagged{Fore.RESET}")
+
+    for tag, expected, found in parser_errors:
+        print(f"Correct slot for {tag} is '{expected}' but found '{found}'")
+
+
+def comparing_attributes(attribute, attribute_result):
+    comparison = False
+
+    if "attribute" in attribute:
+        if attribute["attribute"] == attribute_result.value:
+            comparison = True
+
+    return comparison        
+
+def comparing_conditions(condition, condition_result):
+    comparison = False
+
+    if "attribute" in condition and "value" in condition and "operator" in condition:
+        condition_string = str(condition_result)
+        if condition["operator"] in condition_string \
+                and condition["value"].lower() in condition_string.lower() \
+                and condition["attribute"] in condition_string:
+            comparison = True
+    elif "case" in condition:
+        if isinstance(condition_result, TimeInstantCondition) \
+                and condition_result.applies_to == AppliesTo.PROCESS:
+            if condition["case"] == "begin" and condition_result.changes_to_state == RuntimeState.START:
+                comparison = True
+            elif condition["case"] == "end" and condition_result.changes_to_state == RuntimeState.END:
+                comparison = True
+
+    return comparison
+
+def print_time_results(p1, p2, all1, all2):
+    text = None
+    c1 = p1 is not None
+    c2 = p2 is not None
+    if c1 and c2:
+        text = f"Matched from (position {p1+1} / {len(all1)}) and to (pos {p2+1} / {len(all2)}) condition"
+        if p1 == 0 and p2 == 0:
+            matching_color = Fore.GREEN
+        else:
+            matching_color = Fore.YELLOW
+
+        print(matching_color + text + Fore.RESET)
+    elif c1:
+        text = f"Matched only from (pos {p1+1} / {len(all1)}) condition [to total found {len(all2)}]"
+        print(Fore.YELLOW + text + Fore.RESET)
+    elif c2:
+        text = f"Matched only to (pos {p2+1} / {len(all2)}) condition [from total found {len(all1)}]"
+        print(Fore.YELLOW + text + Fore.RESET)
+    else:
+        text = f"Not matched from and to condition [from total found {len(all1)} / to total found {len(all2)}]"
+        print(Fore.RED + text + Fore.RESET)
+
+    print("Values found for from:")
+    
+    for i, v in enumerate(all1):
+        if c1 and i == p1:
+            text = Fore.GREEN + str(v.value)
+        else:
+            text = str(v.value)
+
+        print(text + Fore.RESET)
+
+    print("Values found for to:")
+    for i, v in enumerate(all2):
+        if c2 and i == p2:
+            text = Fore.GREEN + str(v.value)
+        else:
+            text = str(v.value)
+
+        print(text + Fore.RESET)
+
+
+def print_results(label, p, all):
+    text = None
+    c = p is not None
+    if c:
+        if p == 0:
+            matching_color = Fore.GREEN
+        else:
+            matching_color = Fore.YELLOW
+
+        text = f"Matched {label} (position {p+1 if len(all) > 0 else 0} / {len(all)})"
+        print(f"{matching_color}{text}{Fore.RESET}")
+    else:
+        print(f"{Fore.RED}Not matched {label} [total found {len(all)}]{Fore.RESET}")
+
+    if all:
+        print(f"values found for {label}:")
+        for i, v in enumerate(all):
+            try:
+                text =  str(v.value)
+            except:
+                try:
+                    text =  str(v.metric)
+                except:
+                    text = str(v)
+
+            if i == p:
+                text = Fore.GREEN + text
+
+            print(text + Fore.RESET)
+
+
+def print_condition_results(result, expected, found):
+    if result == EvalResult.OK2:
+        # Print nothing
+        return
+    if result == EvalResult.OK1:
+        matching_color = Fore.GREEN
+        text = "Matched condition"
+    else:
+        matching_color = Fore.RED
+        if result == EvalResult.NOK3:
+            text = f"Not matched condition. Expected: {expected['operator']} {expected['value']}"
+        elif result == EvalResult.NOK2:
+            text = f"Found a condition that did not exist: {found.op} {found.value.value}"
+        elif result == EvalResult.NOK1:
+            text = f"Wrongly matched conditions. Found: {found.op} {found.value.value}. Expected: {expected['operator']} {expected['value']}"
+
+    print(f"{matching_color}{text}{Fore.RESET}")
+
+
+def param_eval(goldstandard, command, command_param):
+    if command_param in command.values:
+        found_values = [command.values[command_param]]
+    else:
+        found_values = command.alt_match_a[command_param] if command_param in command.alt_match_a else [] + \
+            command.alt_match_b[command_param] if command_param in command.alt_match_b else [
+        ]
+
+    if goldstandard is None:
+        if found_values:
+            result = EvalResult.NOK2
+            position = None
+        else:
+            result = EvalResult.OK2
+            position = 0
+    else:
+        position = next((i for i,v in enumerate(found_values) if goldstandard(v.value)), None)
+
+        if position is None:
+            if found_values:
+                result = EvalResult.NOK1
+            else:
+                result = EvalResult.NOK3
+            
+        elif position == 0:
+            result = EvalResult.OK1
+        else:
+            result = EvalResult.P1    
+
+    return result, position, found_values
+
+def condition_eval(goldstandard, command):
+    result = None
+
+    expected_condition = goldstandard["condition"] if "condition" in goldstandard else None
+    found_condition = command.values["conditional_metric"] if "conditional_metric" in command.values else None
+
+    if expected_condition is not None:
+        if found_condition is None:
+            result = EvalResult.NOK3
+        else:
+            if "operator" in expected_condition and "value" in expected_condition:
+                if expected_condition["operator"] == found_condition.op \
+                        and expected_condition["value"] == str(found_condition.value.value):
+                    result = EvalResult.OK1
+                else:
+                    result = EvalResult.NOK1
+            else:
+                result = EvalResult.NOK1
+
+    else:
+        if found_condition is not None:
+            result = EvalResult.NOK2
+        else:
+            result = EvalResult.OK2                
+
+    return result, expected_condition, found_condition
+
+
 
 
 def main(args):

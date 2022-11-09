@@ -18,7 +18,7 @@ parser.add_argument("-v", "--verbosity" ,help="If this option is activated, you 
 parser.add_argument("-m", "--model", help="If this option is activated, you will be able to choose the model to evaluate. 1: General token classification, 2: Specific token classification", type=int, default=2)
 
 one_slot_weights = {
-    "emb_is": {
+     "emb_is": {
         'slot_is_sim': 0.25,
         'slot_complete_is_sim': 0.2,
         'slot_emb': 0.25,
@@ -26,6 +26,18 @@ one_slot_weights = {
         'att_is_sim': 0.05,
         'att_complete_is_sim': 0.05
     },
+    "only_bart": {
+        'bart_large_mnli_personalized_complete':0.9,
+        'att_is_sim': 0.05,
+        'att_complete_is_sim': 0.05
+    },
+    "emb_bart": {
+        'slot_is_sim': 0.25,
+        'slot_complete_is_sim': 0.2,
+        'bart_large_mnli_personalized_complete':0.45,
+        'att_is_sim': 0.05,
+        'att_complete_is_sim': 0.05
+    }
     # "only_emb": {
     #     'slot_emb': 0.5,
     #     'slot_complete_emb': 0.4,
@@ -100,6 +112,26 @@ multi_slot_weights = {
         "ev2_$slot_complete_is_sim": 0.05,
         'ev2_$slot_emb': 0.07,
         'ev2_$slot_complete_emb': 0.06,
+        "ev1_$att_is_sim": 0.01,
+        "ev1_$att_complete_is_sim": 0.01,
+        "ev2_$att_is_sim": 0.01,
+        "ev2_$att_complete_is_sim": 0.01,
+        "same_type": 0.25,
+        "condition_ratio": 0.25
+    },
+    "only_bart": {
+        'ev1_$bart_large_mnli_personalized_complete': 0.25,
+        'ev2_$bart_large_mnli_personalized_complete': 0.25,
+        'same_type': 0.25,
+        'condition_ratio': 0.25
+    },
+    "emb_bart" : {
+        'ev1_$slot_is_sim': 0.05,
+        "ev1_$slot_complete_is_sim": 0.05,
+        'ev1_$bart_large_mnli_personalized_complete': 0.13,
+        'ev2_$slot_is_sim': 0.05,
+        "ev2_$slot_complete_is_sim": 0.05,
+        'ev2_$bart_large_mnli_personalized_complete': 0.13,
         "ev1_$att_is_sim": 0.01,
         "ev1_$att_complete_is_sim": 0.01,
         "ev2_$att_is_sim": 0.01,
@@ -239,6 +271,29 @@ args = parser.parse_args()
 results = []
 ppi_results = []
 
+parsing_metrics_results = []
+parsing_tags_results = []
+matching_metrics_results = []
+matching_attrib_results = []
+
+
+def create_row(v, attrib, evaluation):
+    return {
+        "type": v,
+        "attrib": attrib,
+        **evaluation.value,
+        "precision": evaluation.precision(),
+        "recall": evaluation.recall(),
+        "precision_partial": evaluation.precision(strict=False),
+        "recall_partial": evaluation.recall(strict=False)
+    }
+
+def update_results(results, v, evaluations):
+    tagging_aggregation = input_test.aggregate_eval_results(evaluations)
+    results.append(create_row(v, "GLOBAL", tagging_aggregation))
+    for t in evaluations:
+        results.append(create_row(v, t, evaluations[t]))
+
 for v in one_slot_weights:
     other = {
         "weights": {
@@ -250,83 +305,31 @@ for v in one_slot_weights:
     print("---------- "+ v + " -------------------")
     test = input_test.InputTest(args=args, other=other)
 
-    overall = input_test.aggregate_results(test.attribute_results)
-    identified = sum(test.identified_atts.values())
-    goldstandard = sum(test.goldstandard_atts.values())
-
-
-    ppi_results.append({
+    parsing_metrics_results.append({
         "type": v,
-        "good": test.ppi_results["good"],
-        "regular": test.ppi_results["regular"],
-        "bad": test.ppi_results["bad"],
-        "nothing": test.ppi_results["nothing"]
+        **test.tagging_overall
     })
+    update_results(parsing_tags_results, v, test.tagging_tag)
 
-    scores = compute_precision_recall(overall, identified, goldstandard)
-    result = {
+    matching_metrics_results.append({
         "type": v,
-        "attrib": "global",
-        "regular": False,
-        "precision": scores['precision'],
-        "recall": scores['recall'],
-        "results": overall,
-        "identified": identified,
-        "goldstandard": goldstandard
-    }
-    results.append(result)
-
-    for t in test.attribute_results:
-        scores = compute_precision_recall(test.attribute_results[t], test.identified_atts[t], test.goldstandard_atts[t])
-        result = {
-            "type": v,
-            "attrib": t,
-            "regular": False,
-            "precision": scores['precision'],
-            "recall": scores['recall'],
-            "results": test.attribute_results[t],
-            "identified": test.identified_atts[t],
-            "goldstandard": test.goldstandard_atts[t]
-        }
-        
-        results.append(result)
-
-    scores = compute_precision_recall(overall, identified, goldstandard, allow_regular=True)
-    result = {
-        "type": v,
-        "attrib": "global",
-        "regular": True,
-        "precision": scores['precision'],
-        "recall": scores['recall'],
-        "results": overall,
-        "identified": identified,
-        "goldstandard": goldstandard
-    }
-    results.append(result)
-
-    for t in test.attribute_results:
-        scores = compute_precision_recall(test.attribute_results[t], test.identified_atts[t], test.goldstandard_atts[t], allow_regular=True)
-        result = {
-            "type": v,
-            "attrib": t,
-            "regular": True,
-            "precision": scores['precision'],
-            "recall": scores['recall'],
-            "results": test.attribute_results[t],
-            "identified": test.identified_atts[t],
-            "goldstandard": test.goldstandard_atts[t],
-        }
-        
-        results.append(result)
-
+        **test.matching_overall
+    })
+    update_results(matching_attrib_results, v, test.matching_attribute)
 
 #print(json.dumps(results, indent=4))
 
-df = pd.DataFrame(results)
-df.to_csv(f"results.csv")
-
-df_ppi = pd.DataFrame(ppi_results)
-df_ppi.to_csv(f"ppi-results.csv")
+df = pd.DataFrame(parsing_tags_results)
+df.to_csv(f"parsing-tags-results.csv")
+pm = pd.DataFrame(parsing_metrics_results)
+pm.to_csv(f"parsing-metrics-results.csv")
+mm = pd.DataFrame(matching_metrics_results)
+mm.to_csv(f"matching-metrics-results.csv")
+df = pd.DataFrame(matching_attrib_results)
+df.to_csv(f"matching-attrib-results.csv")
 
 with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
-    print(df)
+    print("OVERALL PARSING RESULTS:")
+    print(pm)
+    print("OVERALL MATCHING RESULTS")
+    print(mm)
