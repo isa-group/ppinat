@@ -818,8 +818,8 @@ class ComputeMetricCommand(b.PPIBotCommand):
                     denominator_text, similarity)
                 self.save_or_unknown("denominator", cond,
                                      denominator_text, save_alternatives=True)
-            else:
-                self.save("denominator", None)
+            # else:
+            #     self.save("denominator", None)
 
         # We always need to confirm the base measure
         return False
