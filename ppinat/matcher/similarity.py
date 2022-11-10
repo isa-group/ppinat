@@ -712,7 +712,7 @@ class SimilarityComputer:
         text_vector = self.nlp(text)
         res = {}
         for att in attributes:
-            att_low = att.lower()
+            att_low = att.lower() if callable(getattr(att, "lower", None)) else att
             if text == att_low:
                 res[att] = 1.0
             else:
