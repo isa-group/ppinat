@@ -523,7 +523,7 @@ def comparing_attributes(attribute, attribute_result):
     comparison = False
 
     if "attribute" in attribute:
-        if attribute["attribute"] == attribute_result.value:
+        if attribute["attribute"] == attribute_result:
             comparison = True
 
     return comparison        
