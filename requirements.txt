@@ -24,3 +24,4 @@ sentence-transformers
 sqlalchemy
 tqdm
 google-cloud-storage
+tensorflow~=2.10
