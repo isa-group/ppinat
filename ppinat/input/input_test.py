@@ -162,7 +162,7 @@ class InputTest:
                     recognized_entity = r.RecognizedEntities(None, m["description"])
 
                     annotation = self.evaluate_parser(SIMILARITY, recognized_entity, m["slots"])
-                    result = self.evaluate_matcher(SIMILARITY, recognized_entity, annotation, m["goldstandard"][d_name])
+                    result = self.evaluate_matcher(SIMILARITY, recognized_entity, annotation, m["goldstandard"][d_name], m["type"])
                     
                     # if args.verbosity and result is not None:
                     #     extract_summary(SIMILARITY, m, table_summary, result)
@@ -192,17 +192,17 @@ class InputTest:
                 print(f"-- Attribute {t}")
                 print_evaluation(self.matching_attribute[t])
 
-    def evaluate_matcher(self, similarity, recognized_entity, annotation, goldstandard):
-        if goldstandard["type"] == annotation.get_measure_type():
-            if goldstandard["type"] == "time":
+    def evaluate_matcher(self, similarity, recognized_entity, annotation, goldstandard, type):
+        if type == annotation.get_measure_type():
+            if type == "time":
                 metric_result = self.analyse_metric(
-                    commands.TimeMetricCommand(), recognized_entity, similarity, goldstandard)
-            elif goldstandard["type"] == "count":
+                    commands.TimeMetricCommand(), recognized_entity, similarity, goldstandard, type)
+            elif type == "count":
                 metric_result = self.analyse_metric(
-                    commands.CountMetricCommand(), recognized_entity, similarity, goldstandard)
-            elif goldstandard["type"] == "data":
+                    commands.CountMetricCommand(), recognized_entity, similarity, goldstandard, type)
+            elif type == "data":
                 metric_result = self.analyse_metric(
-                    commands.DataMetricCommand(), recognized_entity, similarity, goldstandard)
+                    commands.DataMetricCommand(), recognized_entity, similarity, goldstandard, type)
         
             agg_result = self.aggregation_eval(recognized_entity, similarity, goldstandard)
 
@@ -233,7 +233,7 @@ class InputTest:
         return annotation
 
 
-    def analyse_metric(self, command, recognized_entity, similarity, goldstandard):        
+    def analyse_metric(self, command, recognized_entity, similarity, goldstandard, type):        
         try:
             command.match_entities(recognized_entity, similarity)
         except:
@@ -241,13 +241,13 @@ class InputTest:
             return None
 
         matcher_metric_result = None
-        if goldstandard["type"] == "time":
+        if type == "time":
             matcher_metric_result = self.time_metric_eval(command, goldstandard)
 
-        elif goldstandard["type"] == "count":
+        elif type == "count":
             matcher_metric_result = self.count_metric_eval(command, goldstandard)
 
-        elif goldstandard["type"] == "data":
+        elif type == "data":
             matcher_metric_result = self.data_metric_eval(command, goldstandard)
 
         return matcher_metric_result
