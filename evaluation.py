@@ -2,23 +2,26 @@ import argparse
 from ppinat.input import input_test
 import json
 import pandas as pd
+import re
 
 
-def compute_precision_recall(overall, identified, goldstandard, allow_regular = False):
-    found = overall['good'] + overall['regular'] if allow_regular else overall['good']
+def compute_precision_recall(overall, identified, goldstandard, allow_regular=False):
+    found = overall['good'] + \
+        overall['regular'] if allow_regular else overall['good']
 
     return {
         "precision": found / identified if identified > 0 else None,
         "recall": found / goldstandard if goldstandard > 0 else None
-    }    
+    }
+
 
 parser = argparse.ArgumentParser()
-parser.add_argument('filename', metavar='FILENAME', help='the file with the test', nargs='?', default='input/metrics_dataset-traffic-test.json' )
-parser.add_argument("-v", "--verbosity" ,help="If this option is activated, you will be able to view the complete information in a CSV file called input_test_info.csv", action="store_true")
-parser.add_argument("-m", "--model", help="If this option is activated, you will be able to choose the model to evaluate. 1: General token classification, 2: Specific token classification", type=int, default=2)
+parser.add_argument('filename', metavar='FILENAME', help='the file with the test config', nargs='?', default='./config.json' )
+parser.add_argument("-v", "--verbosity",
+                    help="If this option is activated, you will be able to view the complete information in a CSV file called input_test_info.csv", action="store_true")
 
-one_slot_weights = {
-     "emb_is": {
+""" one_slot_weights = {
+    "emb_is": {
         'slot_is_sim': 0.25,
         'slot_complete_is_sim': 0.2,
         'slot_emb': 0.25,
@@ -100,10 +103,10 @@ one_slot_weights = {
     #     'att_complete_is_sim': 0.05
     # }
 
-}
+} """
 
-multi_slot_weights = {
-    "emb_is" : {
+""" multi_slot_weights = {
+    "emb_is": {
         'ev1_$slot_is_sim': 0.05,
         "ev1_$slot_complete_is_sim": 0.05,
         'ev1_$slot_emb': 0.07,
@@ -175,7 +178,7 @@ multi_slot_weights = {
         "same_type": 0.25,
         "condition_ratio": 0.25
     },
-    "emb_sim" : {
+    "emb_sim": {
         'ev1_$slot_sim': 0.05,
         "ev1_$slot_complete_sim": 0.05,
         'ev1_$slot_emb': 0.07,
@@ -191,7 +194,7 @@ multi_slot_weights = {
         "same_type": 0.25,
         "condition_ratio": 0.25
     },
-    "sim_is" : {
+    "sim_is": {
         'ev1_$slot_sim': 0.05,
         "ev1_$slot_complete_sim": 0.05,
         'ev1_$slot_is_sim': 0.07,
@@ -208,7 +211,7 @@ multi_slot_weights = {
         "condition_ratio": 0.25
     },
 
-    "no_complete" : {
+    "no_complete": {
         'ev1_$slot_is_sim': 0.1,
         'ev1_$slot_emb': 0.13,
         'ev2_$slot_is_sim': 0.1,
@@ -230,7 +233,7 @@ multi_slot_weights = {
         "same_type": 0.25,
         "condition_ratio": 0.25
     },
-    "without_same" : {
+    "without_same": {
         'ev1_$slot_is_sim': 0.09,
         "ev1_$slot_complete_is_sim": 0.08,
         'ev1_$slot_emb': 0.10,
@@ -245,7 +248,7 @@ multi_slot_weights = {
         "ev2_$att_complete_is_sim": 0.01,
         "condition_ratio": 0.25
     },
-    "without_condition" : {
+    "without_condition": {
         'ev1_$slot_is_sim': 0.09,
         "ev1_$slot_complete_is_sim": 0.08,
         'ev1_$slot_emb': 0.10,
@@ -260,7 +263,7 @@ multi_slot_weights = {
         "ev2_$att_complete_is_sim": 0.01,
         "same_type": 0.25,
     }
-}
+} """
 # filename = "metrics_dataset-domesticDeclarations"
 #filename = "metrics_dataset-traffic-test"
 # filename = "metrics_dataset"
@@ -268,18 +271,10 @@ multi_slot_weights = {
 
 args = parser.parse_args()
 
-results = []
-ppi_results = []
 
-parsing_metrics_results = []
-parsing_tags_results = []
-matching_metrics_results = []
-matching_attrib_results = []
-
-
-def create_row(v, attrib, evaluation):
+def create_row(attrib, evaluation, **kwargs):
     return {
-        "type": v,
+        **kwargs,
         "attrib": attrib,
         **evaluation.value,
         "precision": evaluation.precision(),
@@ -288,48 +283,64 @@ def create_row(v, attrib, evaluation):
         "recall_partial": evaluation.recall(strict=False)
     }
 
-def update_results(results, v, evaluations):
+def update_results(results, evaluations, **kwargs):
     tagging_aggregation = input_test.aggregate_eval_results(evaluations)
-    results.append(create_row(v, "GLOBAL", tagging_aggregation))
+    results.append(create_row("GLOBAL", tagging_aggregation, **kwargs))
     for t in evaluations:
-        results.append(create_row(v, t, evaluations[t]))
+        results.append(create_row(t, evaluations[t], **kwargs))
 
-for v in one_slot_weights:
-    other = {
-        "weights": {
-            "one_slot": one_slot_weights[v],
-            "multi_slot": multi_slot_weights[v]
-        }
-    }
+config = {}
+with open(args.filename, "r") as c:
+    config = json.load(c)
 
-    print("---------- "+ v + " -------------------")
-    test = input_test.InputTest(args=args, other=other)
+datasets = config["datasets"]
+parsing = config["parsing"]
+matching = config["matching"]
 
-    parsing_metrics_results.append({
-        "type": v,
-        **test.tagging_overall
-    })
-    update_results(parsing_tags_results, v, test.tagging_tag)
+for dataset in datasets:
+    parsing_metrics_results = []
+    parsing_tags_results = []
+    matching_metrics_results = []
+    matching_attrib_results = []
 
-    matching_metrics_results.append({
-        "type": v,
-        **test.matching_overall
-    })
-    update_results(matching_attrib_results, v, test.matching_attribute)
+    for parsing_model in parsing:
+        for matching_model in matching:
+            other = {
+                "weights": matching[matching_model]
+            }
 
-#print(json.dumps(results, indent=4))
+            print(f"---------- {parsing_model} / {matching_model} ----------")
+            test = input_test.InputTest(
+                args=args, dataset=dataset, parsing_model=parsing_model, other=other)
 
-df = pd.DataFrame(parsing_tags_results)
-df.to_csv(f"parsing-tags-results.csv")
-pm = pd.DataFrame(parsing_metrics_results)
-pm.to_csv(f"parsing-metrics-results.csv")
-mm = pd.DataFrame(matching_metrics_results)
-mm.to_csv(f"matching-metrics-results.csv")
-df = pd.DataFrame(matching_attrib_results)
-df.to_csv(f"matching-attrib-results.csv")
 
-with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
-    print("OVERALL PARSING RESULTS:")
-    print(pm)
-    print("OVERALL MATCHING RESULTS")
-    print(mm)
+            parsing_metrics_results.append({
+                "parsing_type": parsing_model,
+                "matching_type": matching_model,
+                **test.tagging_overall
+            })
+            update_results(parsing_tags_results, test.tagging_tag, parsing_type=parsing_model, matching_type=matching_model)
+
+            matching_metrics_results.append({
+                "parsing_type": parsing_model,
+                "matching_type": matching_model,
+                **test.matching_overall
+            })
+            update_results(matching_attrib_results, test.matching_attribute, parsing_type=parsing_model, matching_type=matching_model)
+
+    dataset_name = re.findall("./input/(.*)", dataset)[0]
+
+    df = pd.DataFrame(parsing_tags_results)
+    df.to_csv(f"{dataset_name}-parsing-tags-results.csv")
+    pm = pd.DataFrame(parsing_metrics_results)
+    pm.to_csv(f"{dataset_name}-parsing-metrics-results.csv")
+    mm = pd.DataFrame(matching_metrics_results)
+    mm.to_csv(f"{dataset_name}-matching-metrics-results.csv")
+    df = pd.DataFrame(matching_attrib_results)
+    df.to_csv(f"{dataset_name}-matching-attrib-results.csv")
+
+    with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
+        print("OVERALL PARSING RESULTS:")
+        print(pm)
+        print("OVERALL MATCHING RESULTS")
+        print(mm)

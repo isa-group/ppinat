@@ -15,7 +15,8 @@ from colorama import Fore
 from ppinat.helpers import load_log
 from ppinat.matcher.similarity import SimilarityComputer
 from ppinat.ppiparser.ppiannotation import PPIAnnotation, text_by_tag
-from ppinat.ppiparser.transformer import load_transformer, load_general_transformer
+from ppinat.ppiparser.transformer import load_transformer, load_general_transformer, load_perfect_decoder
+from ppinat.ppiparser.decoder import load_decoder
 from ppinot4py.model import AppliesTo, RuntimeState, TimeInstantCondition
 from ppinat.models.gcloud import update_models
 
@@ -70,8 +71,12 @@ class Evaluation:
             false_positive = self.value[EvalResult.NOK1] + self.value[EvalResult.NOK2]
         return false_positive
 
-    def false_negative(self):
-        return self.value[EvalResult.NOK3]
+    def false_negative(self, strict=True):
+        if strict:
+            false_negative = self.value[EvalResult.NOK1] + self.value[EvalResult.NOK3] + self.value[EvalResult.P1]
+        else:
+            false_negative = self.value[EvalResult.NOK1] + self.value[EvalResult.NOK3]
+        return false_negative
 
     def precision(self, strict=True):
         if self.true_positive(strict) == 0:
@@ -85,7 +90,11 @@ class Evaluation:
         return float(self.true_positive(strict)) / float(self.true_positive(strict) + self.false_negative())
 
 class InputTest:
-    def __init__(self, args, other=None):
+    def __init__(self, args, dataset, parsing_model, other=None):
+        if not exists(dataset):
+            raise RuntimeError(
+                f"File provided does not exist: {dataset}")
+
         self.ppi_results = {
             "good": 0,
             "partial": 0,
@@ -117,34 +126,35 @@ class InputTest:
         self.goldstandard_atts = {k: 0 for k in ATTRIBUTES}
         self.identified_atts = {k: 0 for k in ATTRIBUTES}
 
-        if not exists(args.filename):
-            raise RuntimeError(
-                f"File provided does not exist: {args.filename}")
-
-        with open(args.filename, "r") as j:
+        with open(dataset, "r") as j:
             data = json.load(j)
 
-            self.seleted_model = args.model
-            if self.seleted_model == 1:
+            self.seleted_model = parsing_model
+            if self.seleted_model == "general":
                 print("Using general token classification model")
-            else:
+            elif self.seleted_model == "specific":
                 print("Using specific token classification model")
+            elif self.seleted_model == "perfect":
+                print("Using perfect metric decoder")
+            else:
+                print("Using viterbi decoder")
 
             table_summary = []
 
             datasets = data["datasets"]
             for d_name in datasets:
+                metrics = data["metrics"]
+
                 print(Fore.WHITE + "Loading dataset: " + d_name + Fore.RESET)
                 log_file = load_dataset(datasets[d_name])
                 print(Fore.GREEN + "Loaded" + Fore.RESET)
 
                 print(Fore.WHITE + "Loading similarity computer: " + Fore.RESET)
                 weights = other["weights"] if "weights" in other else None
-                SIMILARITY = load_similarity(log_file, self.seleted_model, weights)
+                SIMILARITY = load_similarity(log_file, metrics, self.seleted_model, weights)
                 print(Fore.GREEN + "Loaded" + Fore.RESET)
 
                 print(Fore.WHITE + "Analyzing metrics..." + Fore.RESET)
-                metrics = data["metrics"]
                 for m in filter(lambda x: (x["dataset"] == d_name or d_name in x["dataset"]) and ("goldstandard" in x and d_name in x["goldstandard"]), metrics):
                     result = None
 
@@ -398,24 +408,32 @@ def write_file(filename, data):
         f.write(data)
         f.close()
 
-def load_similarity(log, selected_model, weights):
+def load_similarity(log, metrics, parsing_model, weights):
     NLP = spacy.load('en_core_web_lg')
     LOG = load_log(log, id_case="ID", time_column="DATE",
                 activity_column="ACTIVITY")
 
-    if selected_model == 1:
+    if parsing_model == "general":
         TOKEN_CLASSIFIER = './ppinat/models/GeneralClassifier'
-        TRANSFORMER = load_general_transformer(TOKEN_CLASSIFIER)
+        DECODER = load_general_transformer(TOKEN_CLASSIFIER)
         
-    else:
+    elif parsing_model == "specific":
         update_models()
         TEXT_CLASSIFIER = './ppinat/models/TextClassification'
         TIME_MODEL = './ppinat/models/TimeModel'
         COUNT_MODEL = './ppinat/models/CountModel'
         DATA_MODEL = './ppinat/models/DataModel'
-        TRANSFORMER = load_transformer(TEXT_CLASSIFIER, TIME_MODEL, COUNT_MODEL, DATA_MODEL)
+        DECODER = load_transformer(TEXT_CLASSIFIER, TIME_MODEL, COUNT_MODEL, DATA_MODEL)
 
-    SIMILARITY = SimilarityComputer(LOG, NLP, metric_decoder=TRANSFORMER, weights = weights)
+    elif parsing_model == "perfect":
+        DECODER = load_perfect_decoder(metrics)
+
+    else:
+        TRAINING_FILE = 'input/parser_training/parser_training_data.json'
+        PARSER_SERIAL_FILE = 'input/parser_training/parser_serialized.p'
+        DECODER, NLP = load_decoder(TRAINING_FILE, PARSER_SERIAL_FILE)
+
+    SIMILARITY = SimilarityComputer(LOG, NLP, metric_decoder=DECODER, weights = weights)
     return SIMILARITY
 
 def aggregate_results(attribute_results):

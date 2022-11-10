@@ -1,5 +1,6 @@
 from transformers import AutoModelForTokenClassification, AutoModelForSequenceClassification
 from .PPIDecoder import PPIDecoder
+from .PPIPerfectDecoder import PPIPerfectDecoder
 from transformers import AutoTokenizer  
 
 model_checkpoint = "distilbert-base-uncased"
@@ -16,3 +17,6 @@ def load_transformer(text_model, time_model, count_model, data_model):
     data_model = AutoModelForTokenClassification.from_pretrained(data_model)
     model = {"time": time_model, "count": count_model, "data": data_model} 
     return PPIDecoder(model, tokenizer, text_model)
+
+def load_perfect_decoder(metrics):
+    return PPIPerfectDecoder(metrics)
