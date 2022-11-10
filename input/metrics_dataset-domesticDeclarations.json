@@ -85,7 +85,7 @@
       "dataset": "domesticDeclarations",
       "slots": {
         "AGR": "Average",
-        "AttributeValue": "declared",
+        "AttributeValue": "declared costs",
         "GBC": "trip"
       },
       "goldstandard": {
@@ -291,7 +291,13 @@
           "condition": {
             "operator": "gt",
             "value": "0"
+          },
+          "filter": {
+            "attribute": "ACTIVITY",
+            "operator": "==",
+            "value": "Declaration SUBMITTED by EMPLOYEE"
           }
+
         }
       }
     },
@@ -506,7 +512,6 @@
       "goldstandard": {
         "domesticDeclarations": {
           "type": "time",
-          "aggregation": "AVG",
           "from_condition": {
             "case": "begin"
           },
@@ -522,8 +527,7 @@
       "dataset": "domesticDeclarations",
       "slots": {
         "AGR": "ratio of",
-        "CE": "not eventually paid",
-        "FDE": "reimbursement requests"
+        "CE": "reimbursement requests that are not eventually paid"
       },
       "goldstandard": {
         "domesticDeclarations": {
@@ -547,8 +551,7 @@
       "dataset": "domesticDeclarations",
       "slots": {
         "AGR": "Percentage of",
-        "CE": "rejected requests",
-        "FDE": "reimbursement"
+        "CE": "rejected requests for reimbursement"
       },
       "goldstandard": {
         "domesticDeclarations": {
@@ -608,6 +611,10 @@
             "attribute": "ACTIVITY",
             "operator": "==",
             "value": "Declaration FINAL_APPROVED by SUPERVISOR"
+          },
+          "condition": {
+            "operator": "gt",
+            "value": "0"
           }
         }
       }
@@ -626,7 +633,7 @@
           "type": "data",
           "aggregation": "AVG",
           "data_condition": {
-            "attribute": "Amount"
+            "attribute": "case:Amount"
           }
         }
       }

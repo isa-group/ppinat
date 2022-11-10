@@ -133,6 +133,10 @@
             "attribute": "ACTIVITY",
             "operator": "==",
             "value": "Add Penalty"
+          }, 
+          "condition": {
+            "operator": "gt",
+            "value": "0"
           }
         }
       }
@@ -153,6 +157,10 @@
             "attribute": "ACTIVITY",
             "operator": "==",
             "value": "Send For Credit Collection"
+          },
+          "condition": {
+            "operator": "gt",
+            "value": "0"
           }
         }
       }
@@ -195,7 +203,11 @@
             "attribute": "ACTIVITY",
             "operator": "==",
             "value": "Send For Credit Collection"
-          }
+          },
+          "condition": {
+            "operator": "gt",
+            "value": "0"
+          }          
         }
       }
     },
@@ -244,7 +256,6 @@
       "dataset": "traffic",
       "slots": {
         "CE": "payments",
-        "AGR": "in relation to",
         "FDE": "notified fines"
       },
       "goldstandard": {
@@ -303,6 +314,10 @@
             "attribute": "ACTIVITY",
             "operator": "==",
             "value": "Insert Date Appeal to Prefecture"
+          },
+          "condition": {
+            "operator": "gt",
+            "value": "0"
           }
         }
       }
@@ -323,6 +338,10 @@
             "attribute": "ACTIVITY",
             "operator": "==",
             "value": "Add Penalty"
+          }, 
+          "condition": {
+            "operator": "gt",
+            "value": "0"
           }
         }
       }
