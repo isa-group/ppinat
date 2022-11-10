@@ -36,6 +36,42 @@
         "same_type": 0.25,
         "condition_ratio": 0.25
       }
+    },
+    "only_bart": { 
+      "one_slot": {
+        "bart_large_mnli_personalized_complete":0.9,
+        "att_is_sim": 0.05,
+        "att_complete_is_sim": 0.05
+      },
+      "multi_slot": {
+        "ev1_$bart_large_mnli_personalized_complete": 0.25,
+        "ev2_$bart_large_mnli_personalized_complete": 0.25,
+        "same_type": 0.25,
+        "condition_ratio": 0.25      
+      }
+    },
+    "emb_bart": {
+      "one_slot": {
+        "slot_is_sim": 0.25,
+        "slot_complete_is_sim": 0.2,
+        "bart_large_mnli_personalized_complete":0.45,
+        "att_is_sim": 0.05,
+        "att_complete_is_sim": 0.05
+      },
+      "multi_slot": {
+        "ev1_$slot_is_sim": 0.05,
+        "ev1_$slot_complete_is_sim": 0.05,
+        "ev1_$bart_large_mnli_personalized_complete": 0.13,
+        "ev2_$slot_is_sim": 0.05,
+        "ev2_$slot_complete_is_sim": 0.05,
+        "ev2_$bart_large_mnli_personalized_complete": 0.13,
+        "ev1_$att_is_sim": 0.01,
+        "ev1_$att_complete_is_sim": 0.01,
+        "ev2_$att_is_sim": 0.01,
+        "ev2_$att_complete_is_sim": 0.01,
+        "same_type": 0.25,
+        "condition_ratio": 0.25
+      }
     }
   }
 }
