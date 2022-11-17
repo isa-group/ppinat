@@ -66,6 +66,7 @@
       "goldstandard": {
         "domesticDeclarations": {
           "type": "time",
+          "aggregation": "AVG",
           "from_condition": {
             "attribute": "ACTIVITY",
             "operator": "==",
@@ -119,11 +120,12 @@
       }
     },
     {
-      "description": "Average percentage of rejections by approver",
+      "description": "percentage of rejections by approver",
+      "former_description": "Average percentage of rejections by approver",
       "type": "count",
       "dataset": "domesticDeclarations",
       "slots": {
-        "AGR": "Average percentage of",
+        "AGR": "percentage of",
         "CE": "rejections by approver"
       },
       "goldstandard": {
@@ -163,11 +165,12 @@
       }
     },
     {
-      "description": "Average percentage of rejected workflows by worker",
+      "former_description": "Average percentage of rejected workflows by worker",
+      "description": "percentage of rejected workflows by worker",
       "type": "count",
       "dataset": "domesticDeclarations",
       "slots": {
-        "AGR": "Average percentage of",
+        "AGR": "percentage of",
         "CE": "rejected workflows by worker"
       },
       "goldstandard": {
@@ -218,15 +221,13 @@
       }
     },
     {
-      "description": "The director should approve at most the 5% of the requests",
+      "description": "The % of the requests the director approves",      
+      "former_description": "The director should approve at most the 5% of the requests",
       "type": "count",
       "dataset": "domesticDeclarations",
       "slots": {
-        "CE": "The director should approve",
-        "CCI": "at most the",
-        "AttributeValue": "5",
-        "AGR": "%",
-        "FDE": "the requests"
+        "CE": "the requests the director approves",
+        "AGR": "% of"
       },
       "goldstandard": {
         "domesticDeclarations": {
@@ -236,24 +237,18 @@
             "attribute": "ACTIVITY",
             "operator": "==",
             "value": "Declaration FINAL_APPROVED by SUPERVISOR"
-          },
-          "condition": {
-            "operator": "lt",
-            "value": "5"
           }
         }
       }
     },
     {
-      "description": "at most the 10% of the submitted declarations should be rejected",
+      "former_description": "at most the 10% of the submitted declarations should be rejected",
+      "description": "The % of submitted declarations that are rejected",
       "type": "count",
       "dataset": "domesticDeclarations",
       "slots": {
-        "CCI": "at most the",
-        "AttributeValue": "10",
-        "AGR": "%",
-        "FDE": "the submitted declarations",
-        "CE": "rejected"
+        "AGR": "% of",
+        "CE": "submitted declarations that are rejected"
       },
       "goldstandard": {
         "domesticDeclarations": {
@@ -263,10 +258,6 @@
             "attribute": "ACTIVITY",
             "operator": "==",
             "value": "Declaration REJECTED by ADMINISTRATION"
-          },
-          "condition": {
-            "operator": "lt",
-            "value": "10"
           }
         }
       }
@@ -291,13 +282,7 @@
           "condition": {
             "operator": "gt",
             "value": "0"
-          },
-          "filter": {
-            "attribute": "ACTIVITY",
-            "operator": "==",
-            "value": "Declaration SUBMITTED by EMPLOYEE"
           }
-
         }
       }
     },
@@ -511,6 +496,7 @@
       },
       "goldstandard": {
         "domesticDeclarations": {
+          "aggregation": "AVG",
           "type": "time",
           "from_condition": {
             "case": "begin"
@@ -669,6 +655,7 @@
       "goldstandard": {
         "domesticDeclarations": {
           "type": "time",
+          "aggregation": "AVG",
           "from_condition": {
             "attribute": "ACTIVITY",
             "operator": "==",

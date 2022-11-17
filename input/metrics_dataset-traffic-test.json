@@ -15,6 +15,7 @@
       },
       "goldstandard": {
         "traffic": {
+          "aggregation": "AVG",
           "type": "time",
           "from_condition": {
             "case": "begin"
@@ -36,6 +37,7 @@
       },
       "goldstandard": {
         "traffic": {
+          "aggregation": "AVG",
           "type": "time",
           "from_condition": {
             "case": "begin"
@@ -59,6 +61,7 @@
       "goldstandard": {
         "traffic": {
           "type": "time",
+          "aggregation": "AVG",
           "from_condition": {
             "attribute": "ACTIVITY",
             "operator": "==",
@@ -82,6 +85,7 @@
       "goldstandard": {
         "traffic": {
           "type": "time",
+          "aggregation": "AVG",
           "from_condition": {
             "case": "begin"
           },
@@ -104,6 +108,7 @@
       "goldstandard": {
         "traffic": {
           "type": "time",
+          "aggregation": "AVG",
           "from_condition": {
             "attribute": "ACTIVITY",
             "operator": "==",
@@ -176,6 +181,7 @@
       "goldstandard": {
         "traffic": {
           "type": "time",
+          "aggregation": "AVG",
           "from_condition": {
             "case": "begin"
           },
@@ -221,6 +227,7 @@
       "goldstandard": {
         "traffic": {
           "type": "time",
+          "aggregation": "AVG",
           "from_condition": {
             "case": "begin"
           },
@@ -242,6 +249,7 @@
       "goldstandard": {
         "traffic": {
           "type": "count",
+          "aggregation": "SUM",
           "count_condition": {
             "attribute": "ACTIVITY",
             "operator": "==",
@@ -416,6 +424,7 @@
       "goldstandard": {
         "traffic": {
           "type": "time",
+          "aggregation": "AVG",
           "from_condition": {
             "attribute": "ACTIVITY",
             "operator": "==",
@@ -460,6 +469,7 @@
       "goldstandard": {
         "traffic": {
           "type": "time",
+          "aggregation": "AVG",
           "from_condition": {
             "attribute": "ACTIVITY",
             "operator": "==",
