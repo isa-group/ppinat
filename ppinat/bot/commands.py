@@ -771,48 +771,45 @@ class ComputeMetricCommand(b.PPIBotCommand):
             else:
                 return entities.extract_entity("AggFunction") is not None
 
-    def match_entities(self, result, similarity, *args):
+    def match_entities(self, result, similarity, infer_agg=False, **args):
         if self.intent == self.command_name:
-            return super().match_entities(result, similarity, *args)
+            return super().match_entities(result, similarity)
         else:
             annotation: PPIAnnotation = similarity.metric_decoder(result.text)
-            metric_type = annotation.get_measure_type()
+            logger.info(f"Matching entities for annotation: {annotation}")
 
-            logger.info(f"We start gathering type {metric_type}")
-            self.metric_type = metric_type
-            if metric_type == "count":
+            self.metric_type = annotation.get_measure_type()
+            
+            if self.metric_type == "count":
+                command_type = CountMetricCommand
+                default_agg = 'SUM'
+            elif self.metric_type == "time":
+                command_type=TimeMetricCommand
+                default_agg = 'AVG'
+            elif self.metric_type == "data":
+                command_type=DataMetricCommand
+                default_agg = 'SUM'
+            else:
+                command_type = None
+
+            if command_type is not None:
                 self.save_partial(
                     "base_measure",
-                    command_type=CountMetricCommand,
+                    command_type=command_type,
                     context=None,
                     entities=result,
                     similarity=similarity
                 )
-            elif metric_type == "time":
-                self.save_partial(
-                    "base_measure",
-                    command_type=TimeMetricCommand,
-                    context=None,
-                    entities=result,
-                    similarity=similarity
-                )
-            elif metric_type == "data":
-                self.save_partial(
-                    "base_measure",
-                    command_type=DataMetricCommand,
-                    context=None,
-                    entities=result,
-                    similarity=similarity
-                )
-            agg_text = annotation.get_aggregation_function()
-            self.match("agg_function", agg_text, similarity)
+
+            matched_agg = self.match("agg_function", annotation.get_aggregation_function(), similarity)
+            if not matched_agg and infer_agg:
+                self.save("agg_function", default_agg)
+
 
             # groupby_text = annotation.get_chunk_by_tag("GBC")
-            groupby_text = text_by_tag(annotation, "GBC")
-            self.groupby = t.LogAttribute.match(groupby_text, similarity)
+            self.groupby = t.LogAttribute.match(text_by_tag(annotation, "GBC"), similarity)
 
             denominator_text = text_by_tag(annotation, "FDE")
-
             if denominator_text is not None:
                 cond = t.InstantCondition.match_from_text(
                     denominator_text, similarity)

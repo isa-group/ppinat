@@ -257,7 +257,7 @@ class InputTest:
         filter_result = None
 
         agg_command = commands.ComputeMetricCommand()
-        agg_command.match_entities(recognized_entity, similarity)
+        agg_command.match_entities(recognized_entity, similarity, infer_agg=True)
 
         agg_eval_func = (lambda x: x == goldstandard['aggregation']) if 'aggregation' in goldstandard else None
         agg_result, agg_pos, agg_found = param_eval(agg_eval_func, agg_command, "agg_function")
