@@ -551,13 +551,13 @@ class SimilarityComputer:
                 cosine_scores_ext = util.cos_sim(event_embedding, self.embeddings[att+"-attrib"])
 
                 for i, slot in enumerate(slots[att]):
-                    slot_vector = self.nlp(slot.text())
+                    slot_vector = self.nlp(preprocess_label(slot.text()))
                     slot_vector_terms = [term for term in slot_vector if not (term.is_stop or term.is_punct)]
 
                     if slot_vector.vector_norm:
                         slot_sim = self.get_similarity_vector(text_vector, slot_vector)
                         
-                    slot_vector_complete = self.nlp(slot.text_complete())
+                    slot_vector_complete = self.nlp(preprocess_label(slot.text_complete()))
                     if slot_vector_complete.vector_norm:
                         slot_complete_sim = self.get_similarity_vector(text_vector, slot_vector_complete)
 
@@ -570,7 +570,7 @@ class SimilarityComputer:
                     idf_slot_complete = [self.idf(term, att) for term in lemmas_slot_complete]
                     idf_text = [self.idf(term, att) for term in lemmas_text]
 
-                    hypothesis3 = f'The condition is: {slot.text_complete()}.'
+                    hypothesis3 = f'The condition is {preprocess_label(slot.text_complete())}.'
 
                     similarity_slot[slot] = {
                         "slot_sim": slot_sim,
@@ -716,7 +716,7 @@ class SimilarityComputer:
             if text == att_low:
                 res[att] = 1.0
             else:
-                att_vector = self.nlp(att_low)
+                att_vector = self.nlp(preprocess_label(att_low))
                 if att_vector.vector_norm:
                     res[att] = self.get_similarity(text_vector, att_vector)
         return res
@@ -814,22 +814,27 @@ class SimilarityComputer:
         for typology in temp_df[0].unique():
             self.df.loc[temp_df["eventClass"].str.startswith(typology), typology + " status"] = temp_df["eventClass"]
 
+
+    def _column_candidates(self):
+        """ 
+        select all categorical columns except for ignored ones
+        """
+        return [c for c in self.df.select_dtypes(include=["object"]).columns.tolist() if c not in self.ignored_columns]
+
+
     def _compute_att_candidates(self):
-        columns = self.df.select_dtypes(include=["object"]).columns.tolist()
+        columns = self._column_candidates()
 
         result = set()
         for column in columns:
             values = self.df[column].dropna().unique()
-            if 1 < len(values) < self.att_threshold and column not in self.ignored_columns:
+            if 1 < len(values) < self.att_threshold:
                 result.add(column)
 
         return result        
 
     def _compute_slot_candidates(self):
-        # select all categorical columns except for ignored ones
-        columns = self.df.select_dtypes(include=["object"]).columns.tolist()
-        #columns = self.df.columns.tolist()
-        columns = [col for col in columns if col not in self.ignored_columns]
+        columns = self._column_candidates()
 
         if self.two_step_match:
             result = {}
@@ -845,7 +850,7 @@ class SimilarityComputer:
                 values = self.df[column].dropna().unique()                
                 #TODO: The following restriction makes sense for time, but for count is not so important
                 change_in_case = np.any(self.df[column].groupby(self.df[self.id_case]).agg('nunique') > 1)
-                if change_in_case and len(values) < self.slot_threshold and column not in self.ignored_columns:
+                if change_in_case and len(values) < self.slot_threshold:
                     #matrix = self.df.groupby([self.id_case, column])['case:id'].count().unstack().fillna(0)
                     count_conditions = self.df[column].groupby(self.df[self.id_case]).value_counts().unstack().count()
                     slot_position[column] = self.df.groupby(self.id_case).cumcount().groupby([self.df[self.id_case], self.df[column]]).first()
@@ -942,3 +947,24 @@ class SimilarityComputer:
     def metric_decoder(self, text):
         return self.decoder.predict_annotation(text)
 
+
+
+CAMEL_PATTERN_1 = re.compile('(.)([A-Z][a-z]+)')
+CAMEL_PATTERN_2 = re.compile('([a-z0-9])([A-Z])')
+
+NON_ALPHANUM_PATTERN = re.compile('[^a-zA-Z]')
+
+def _camel_to_white(label):
+    label = CAMEL_PATTERN_1.sub(r'\1 \2', label)
+    return CAMEL_PATTERN_2.sub(r'\1 \2', label)
+
+def preprocess_label(label):
+    label = str(label)
+    label = _camel_to_white(label).lower()
+    label = NON_ALPHANUM_PATTERN.sub(' ', label)
+    parts = label.split()
+    res = []
+    for part in parts:
+        clean = ''.join([i for i in part if not i.isdigit()])
+        res.append(clean)
+    return ' '.join(res)
