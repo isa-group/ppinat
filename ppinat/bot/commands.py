@@ -803,7 +803,7 @@ class ComputeMetricCommand(b.PPIBotCommand):
 
             matched_agg = self.match("agg_function", annotation.get_aggregation_function(), similarity)
             if not matched_agg and infer_agg:
-                self.save("agg_function", default_agg)
+                self.save("agg_function", t.AggFunction.parse(default_agg))
 
 
             # groupby_text = annotation.get_chunk_by_tag("GBC")
