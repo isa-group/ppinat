@@ -298,8 +298,16 @@ class PPIBotCommand():
         command = resolve_command(command_type, context, entities, similarity, expected=self.parameters[param_name].param_type)
         self.partials.update({param_name: (command, context)})
 
-    def get(self, param_name):
-        return self.values[param_name] if param_name in self.values else None
+    def get(self, param_name, get_alternatives=False):
+        result = self.values[param_name] if param_name in self.values else None
+        if not get_alternatives or result is not None:
+            return result
+        else:            
+            found_values = self.alt_match_a[param_name] if param_name in self.alt_match_a else [] + \
+                self.alt_match_b[param_name] if param_name in self.alt_match_b else [
+            ]
+
+            return found_values[0] if len(found_values) > 0 else None
 
     def add_unknown_parameters(self, param_name, value):
         if type(value) is str:

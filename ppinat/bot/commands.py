@@ -488,9 +488,9 @@ class TimeMetricCommand(b.PPIBotCommand):
 
     def conditional_alernatives_filter(self, param_name, alt_parsed):
         if hasattr(self, "only_text_time_metric") and param_name == "to_cond":
-            if "==" in str(self.values["from_cond"].value) and "!=" in alt_parsed:
+            if "==" in str(self.get("from_cond").value) and "!=" in alt_parsed:
                 return True
-            elif "==" not in str(self.values["from_cond"].value) and "==" in alt_parsed:
+            elif "==" not in str(self.get("from_cond").value) and "==" in alt_parsed:
                 return True
             elif "==" not in alt_parsed and "!=" not in alt_parsed:
                 return True
@@ -644,15 +644,17 @@ class DataMetricCommand(b.PPIBotCommand):
             self.save_or_unknown("attribute", attr, attribute_name,
                                  save_alternatives=True)           
             if conditional_attribute_text is not None:
-                attribute_value = t.LogValue.match(conditional_attribute_text, similarity, self.values["attribute"])
+                attribute_value = t.LogValue.match(conditional_attribute_text, similarity, self.get("attribute", get_alternatives=True))
                 self.save_or_unknown("attribute_value", attribute_value, conditional_attribute_text, save_alternatives=True)
-                entity = {
-                    "operand": "equal",
-                    "value": '"' + self.values['attribute_value'].value + '"'
-                }
-                matched_condition = t.LogicCondition.match_condition(
-                    entity, similarity)
-                self.save("conditional_metric", matched_condition)
+
+                if self.get('attribute_value') is not None:
+                    entity = {
+                        "operand": "equal",
+                        "value": '"' + self.get('attribute_value').value + '"'
+                    }
+                    matched_condition = t.LogicCondition.match_condition(
+                        entity, similarity)
+                    self.save("conditional_metric", matched_condition)
             
             return True
 
