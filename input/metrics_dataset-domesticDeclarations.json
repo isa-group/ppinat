@@ -237,6 +237,10 @@
             "attribute": "ACTIVITY",
             "operator": "==",
             "value": "Declaration FINAL_APPROVED by SUPERVISOR"
+          },
+          "condition": {
+            "operator": "gt",
+            "value": "0"
           }
         }
       }
@@ -258,6 +262,10 @@
             "attribute": "ACTIVITY",
             "operator": "==",
             "value": "Declaration REJECTED by ADMINISTRATION"
+          },
+          "condition": {
+            "operator": "gt",
+            "value": "0"
           }
         }
       }
@@ -437,6 +445,10 @@
             "operator": "==",
             "value": "Declaration FINAL_APPROVED by SUPERVISOR"
           }
+        },
+        "condition": {
+          "operator": "gt",
+          "value": "0"
         }
       }
     },

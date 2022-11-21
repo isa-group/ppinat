@@ -870,8 +870,8 @@ class SimilarityComputer:
                     idf[column] = {w: math.log(len(values)/(1+freq[w])) for w in freq}
                     length[column] = len(values)
 
-                    embeddings[column] = self.model.encode([v.replace("_", " ") for v in values], convert_to_tensor=True)
-                    embeddings[column+"-attrib"] = self.model.encode([column + " " + v.replace("_", " ") for v in values], convert_to_tensor=True)
+                    embeddings[column] = self.model.encode([preprocess_label(v) for v in values], convert_to_tensor=True)
+                    embeddings[column+"-attrib"] = self.model.encode([column + " " + preprocess_label(v) for v in values], convert_to_tensor=True)
                     
 
             for slot1 in slot_condition:

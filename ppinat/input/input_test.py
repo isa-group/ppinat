@@ -214,7 +214,8 @@ class InputTest:
                 result = 'partial'
         else:
             result = 'parser_issue'
-            print(f"{Fore.RED}Matching skipped because measure type didn't match. Found <{annotation.get_measure_type()}>, expected <{goldstandard['type']}>{Fore.RESET}")
+            expected = goldstandard['type'] if 'type' in goldstandard else None
+            print(f"{Fore.RED}Matching skipped because measure type didn't match. Found <{annotation.get_measure_type()}>, expected <{expected}>{Fore.RESET}")
 
         self.matching_overall[result] += 1
 
