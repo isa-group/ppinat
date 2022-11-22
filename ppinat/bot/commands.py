@@ -643,7 +643,7 @@ class DataMetricCommand(b.PPIBotCommand):
             attr = t.LogAttribute.match(attribute_name, similarity)
             self.save_or_unknown("attribute", attr, attribute_name,
                                  save_alternatives=True)           
-            if conditional_attribute_text is not None:
+            if conditional_attribute_text is not None and self.get("attribute", get_alternatives=True) is not None:
                 attribute_value = t.LogValue.match(conditional_attribute_text, similarity, self.get("attribute", get_alternatives=True))
                 self.save_or_unknown("attribute_value", attribute_value, conditional_attribute_text, save_alternatives=True)
 

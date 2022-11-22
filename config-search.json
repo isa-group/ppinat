@@ -1,0 +1,29 @@
+{
+  "datasets": [
+    "./input/metrics_dataset.json"
+  ],
+  "datasetsb": [
+    "./input/metrics_dataset-domesticDeclarations.json",
+    "./input/metrics_dataset-traffic-test.json",
+    "./input/metrics_dataset.json"
+  ],
+  "parsing": [
+    "perfect"
+  ],
+  "parsinga": [
+    "viterbi",
+    "specific",
+    "general",
+    "perfect"
+  ],
+  "matching": {
+    "hs": {
+        "is": [0, 0.25, 0.5, 0.75, 1],
+        "emb": [0, 0.25, 0.5, 0.75, 1],
+        "bart": [0, 0.25, 0.5, 0.75, 1],
+        "complete": [0, 0.5, 1],
+        "att": [0, 0.1],
+        "multi_heur": [0, 0.25, 0.5]
+    }
+   }
+}

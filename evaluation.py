@@ -297,6 +297,38 @@ datasets = config["datasets"]
 parsing = config["parsing"]
 matching = config["matching"]
 
+if "hs" in matching:
+    processed_matching = {}
+    model_comb = [(x, y, z) for x in matching["hs"]["is"] for y in matching["hs"]["emb"] for z in matching["hs"]["bart"] if x + y + z == 1]
+    for (x, y, z) in model_comb:
+        for complete in matching["hs"]["complete"]:
+            for att in matching["hs"]["att"]:
+                one_slot = {
+                    "slot_is_sim": x * (1-att) * (1 - complete),
+                    "slot_complete_is_sim": x * (1-att) * complete,
+                    "slot_emb": y * (1-att) * (1 - complete),
+                    "slot_complete_emb": y * (1-att) * (complete),
+                    "bart_large_mnli_personalized_complete": z * (1-att),
+                    "att_is_sim": att * (1 - complete),
+                    "att_complete_is_sim": att * (complete)
+                }
+
+                for multi_heur in matching["hs"]["multi_heur"]:
+                    multi_slot = {
+                        **({f"ev1_${k}": v/2*(1-multi_heur) for k,v in one_slot.items()}),
+                        **({f"ev2_${k}": v/2*(1-multi_heur) for k,v in one_slot.items()}),
+                        "same_type": multi_heur / 2,
+                        "condition_ratio": multi_heur / 2
+                    }
+                    name = f"is_{x}__emb_{y}__bart_{z}__c_{complete}__att_{att}__mh_{multi_heur}"
+
+                    processed_matching[name] = {
+                        "one_slot": one_slot,
+                        "multi_slot": multi_slot
+                    }
+
+    matching = processed_matching
+
 for dataset in datasets:
     parsing_metrics_results = []
     parsing_tags_results = []
