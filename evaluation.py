@@ -102,7 +102,7 @@ for dataset in datasets:
 
             
         for matching_model in test_execution.result:
-            test = test_execution[matching_model]
+            test = test_execution.result[matching_model]
 
             parsing_metrics_results.append({
                 "parsing_type": parsing_model,
