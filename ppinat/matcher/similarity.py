@@ -478,9 +478,9 @@ class SimilarityComputer:
     def _compute_slot_similarity_features(self, event, slots):
         matching = [SimMatching(self.nlp, self.idf)]
 
-        if "slot_emb" in self.weights['one_slot'] and self.weights['one_slot']["slot_emb"] > 0:
+        if any([x in self.weights['one_slot'] and self.weights['one_slot'][x] > 0 for x in EmbMatching.list_features()]):
             matching.append(EmbMatching(self.model, self.embeddings))
-        if "bart_large_mnli_personalized_complete" in self.weights['one_slot'] and self.weights['one_slot']["bart_large_mnli_personalized_complete"] > 0:
+        if any([x in self.weights['one_slot'] and self.weights['one_slot'][x] > 0 for x in BartMatching.list_features()]):
             matching.append(BartMatching(self.tokenizer, self.device, self.nli_model))
 
         for m in matching:
@@ -911,6 +911,10 @@ class EmbMatching(_Matching):
             "slot_complete_emb": self.cosine_scores_ext[0][i],
         }
 
+    @staticmethod
+    def list_features():
+        return ["slot_emb", "slot_complete_emb"]
+
 class BartMatching(_Matching):
     def __init__(self, tokenizer, device, nli_model):
         self.tokenizer = tokenizer
@@ -937,6 +941,11 @@ class BartMatching(_Matching):
         prob_label_is_true = probs[:, 1]
 
         return prob_label_is_true.item()
+
+    @staticmethod
+    def list_features():
+        return ["bart_large_mnli_personalized_complete"]
+
 
 class SimMatching(_Matching):
     def __init__(self, nlp, idf):
