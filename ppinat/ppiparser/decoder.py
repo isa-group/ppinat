@@ -9,7 +9,7 @@ import pickle
 logger = logging.getLogger(__name__)
 
 
-def load_decoder(training_file, parser_serial_file, train_parser=False):
+def load_decoder(nlp, training_file, parser_serial_file, train_parser=False):
     logger.info("initializing text parser")
     nlp = spacy.load('en_core_web_lg')
     if train_parser or not os.path.exists(parser_serial_file):
@@ -23,4 +23,4 @@ def load_decoder(training_file, parser_serial_file, train_parser=False):
         decoder = ViterbiDecoder(hmm, nlp)
     logger.info("Parser initialized")
 
-    return decoder, nlp
+    return decoder

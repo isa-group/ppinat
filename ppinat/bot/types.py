@@ -481,30 +481,20 @@ class InstantCondition(b.PPIBotType):
     def match_from_text(text, similarity: SimilarityComputer):
         #InstantCondition.threshold_a = 0.6
         #InstantCondition.threshold_b = 0.3
-        logger.info(f"Matching log for {text}")
+        logger.info(f"Instant Condition - Matching log for {text}")
         possible_pairs = similarity.find_most_similar_slot(text, delta_heuristics=0.5)
         possible_pairs_sorted = {k: v for k, v in sorted(possible_pairs.items(), key=lambda item: item[1], reverse=True)}
         cond = get_tuple_by_threshold(InstantCondition.threshold_a, InstantCondition.threshold_b, possible_pairs_sorted, lambda match_name: (InstantCondition(match_name.to_condition())))
         #logger.info(f"matching: {match}")
         return cond
 
+
     @staticmethod
-    def match_pair(similarity: SimilarityComputer, text1, text2=None, type=None):
-        result = ()
-        if text2 is not None:
-            #InstantCondition.threshold_a = 1.8
-            #InstantCondition.threshold_b = 1.5
-            possible_pairs: dict = (similarity.find_most_similar_slots_matching_types(
-                text1, text2, delta_heuristics=0.7))
-            possible_pairs_sorted = {k: v for k, v in sorted(
-                possible_pairs.items(), key=lambda item: item[1], reverse=True)}
+    def match_special_pair(similarity: SimilarityComputer, text1, type):
+        result = []
+        logger.info(f"Instant Condition - Matching special pair for {text1}, {type}")
 
-            logger.info(f"matching: ${possible_pairs}")
-            cond1 = get_tuple_by_threshold(InstantCondition.threshold_a, InstantCondition.threshold_b, possible_pairs_sorted, lambda match_name: (InstantCondition(match_name.slot1.to_condition())))
-            cond2 = get_tuple_by_threshold(InstantCondition.threshold_a, InstantCondition.threshold_b, possible_pairs_sorted, lambda match_name: (InstantCondition(match_name.slot2.to_condition())))
-            result = cond1, cond2
-
-        elif type is not None:
+        if len(type) > 0:
             #InstantCondition.threshold_a = 1.3
             #InstantCondition.threshold_b = 1.2
             possible_match: dict = (
@@ -513,16 +503,42 @@ class InstantCondition(b.PPIBotType):
             ), key=lambda item: item[1], reverse=True)}  # Here i have all the possible matches cond1
             cond1 = get_tuple_by_threshold(InstantCondition.threshold_a, InstantCondition.threshold_b,
                                            possible_match_sorted, lambda match_name: (InstantCondition(match_name.to_condition())))
-            if type == 'negation':
-                cond2 = get_tuple_by_threshold(InstantCondition.threshold_a, InstantCondition.threshold_b, possible_match_sorted, lambda match_name: (
-                    InstantCondition(match_name.to_condition(negation=True))))
-                result = (cond1, cond2)
-            elif type == 'begin':
-                result = (InstantCondition(TimeInstantCondition(
-                    RuntimeState.START, applies_to=AppliesTo.PROCESS)), cond1)
-            elif type == 'end':
-                result = (cond1, InstantCondition(TimeInstantCondition(
-                    RuntimeState.END, applies_to=AppliesTo.PROCESS)))
+
+            InstantCondition.modify_operator_negation(cond1, text1, similarity)
+
+            for t in type:
+                if t == 'negation':
+                    cond2 = get_tuple_by_threshold(InstantCondition.threshold_a, InstantCondition.threshold_b, possible_match_sorted, lambda match_name: (
+                        InstantCondition(match_name.to_condition(negation=True))))
+                    result.append((cond1, cond2))
+                elif t == 'begin':
+                    result.append((InstantCondition(TimeInstantCondition(
+                        RuntimeState.START, applies_to=AppliesTo.PROCESS)), cond1))
+                elif t == 'end':
+                    result.append((cond1, InstantCondition(TimeInstantCondition(
+                        RuntimeState.END, applies_to=AppliesTo.PROCESS))))
+        
+        #return list(map(lambda x: InstantCondition.detect_negative_pair(x, text1, None, similarity), result))
+        return result
+
+
+    @staticmethod
+    def match_pair(similarity: SimilarityComputer, text1, text2=None, type=None):
+        result = ()
+        logger.info(f"Instant Condition - Matching pair for {text1}, {text2}")
+
+        if text2 is not None:
+            #InstantCondition.threshold_a = 1.8
+            #InstantCondition.threshold_b = 1.5
+            possible_pairs: dict = (similarity.find_most_similar_slots_matching_types(
+                text1, text2, delta_heuristics=0.7))
+            possible_pairs_sorted = {k: v for k, v in sorted(
+                possible_pairs.items(), key=lambda item: item[1], reverse=True)}
+
+            logger.debug(f"Instant Condition - matching: ${possible_pairs}")
+            cond1 = get_tuple_by_threshold(InstantCondition.threshold_a, InstantCondition.threshold_b, possible_pairs_sorted, lambda match_name: (InstantCondition(match_name.slot1.to_condition())))
+            cond2 = get_tuple_by_threshold(InstantCondition.threshold_a, InstantCondition.threshold_b, possible_pairs_sorted, lambda match_name: (InstantCondition(match_name.slot2.to_condition())))
+            result = cond1, cond2
 
         InstantCondition.detect_negative_pair(result, text1, text2, similarity)
         return result

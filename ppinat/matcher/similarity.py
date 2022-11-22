@@ -15,6 +15,8 @@ from sentence_transformers import SentenceTransformer, util
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 import torch
 
+logger = logging.getLogger(__name__)
+
 
 class Slot():
     """
@@ -168,8 +170,6 @@ class SimilarityComputer:
 
     """
 
-    Word = re.compile('\w')
-
     def __init__(self, 
                  log: Log, 
                  nlp, 
@@ -181,10 +181,15 @@ class SimilarityComputer:
                  ignored_columns=None,
                  weights=None):
         self.decoder = metric_decoder
+
+        logger.info("Initializing Embeddings...")
         self.model = SentenceTransformer('all-MiniLM-L6-v2')
         #self.model = SentenceTransformer('all-MiniLM-L12-v2')
+
+        logger.info("Initializing bart-large-mlni...")
         self.tokenizer = AutoTokenizer.from_pretrained('facebook/bart-large-mnli')
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        logger.info(f"CUDA available: {torch.cuda.is_available()}")
         self.nli_model = AutoModelForSequenceClassification.from_pretrained('facebook/bart-large-mnli').to(self.device)
 
         self.slot_threshold = slot_threshold
@@ -195,7 +200,33 @@ class SimilarityComputer:
             self.ignored_columns = ignored_columns
         self.nlp = nlp
 
-        self.weights = weights
+        self.weights = weights if weights is not None else {
+            "one_slot": {
+                'slot_is_sim': 0.25,
+                'slot_complete_is_sim': 0.2,
+                'slot_emb': 0.25,
+                'slot_complete_emb': 0.2,
+                'att_is_sim': 0.05,
+                'att_complete_is_sim': 0.05
+            },
+            "multi_slot": {
+                'ev1_$slot_is_sim': 0.05,
+                "ev1_$slot_complete_is_sim": 0.05,
+                'ev1_$slot_emb': 0.07,
+                'ev1_$slot_complete_emb': 0.06,
+                'ev2_$slot_is_sim': 0.05,
+                "ev2_$slot_complete_is_sim": 0.05,
+                'ev2_$slot_emb': 0.07,
+                'ev2_$slot_complete_emb': 0.06,
+
+                "ev1_$att_is_sim": 0.01,
+                "ev1_$att_complete_is_sim": 0.01,
+                "ev2_$att_is_sim": 0.01,
+                "ev2_$att_complete_is_sim": 0.01,
+                "same_type": 0.25,
+                "condition_ratio": 0.25
+            }
+        }
 
         self.id_case = log.id_case
         self.time_column = log.time_column
@@ -210,7 +241,10 @@ class SimilarityComputer:
 
         #self.sanitize_typology_column()
         # self.add_extra_typology_columns()
+        logger.info("Initializing slot candidates")
         self._compute_slot_candidates()
+
+        logger.info("Initializing att candidates")
         self.atts = self._compute_att_candidates()        
         self.aggr_values = {
             'AVG': list(self.nlp.pipe(['average', 'mean', 'total average'])),
@@ -234,6 +268,7 @@ class SimilarityComputer:
             'gt': list(self.nlp.pipe(["greater than", "bigger than", "larger than", ">=",  ">", "greater or equal than", "at least"])),
             'lt': list(self.nlp.pipe(["lower than", "less than", "shorter than", "smaller than", "<=", "<", "lower or equal than", "at most"]))            
         }
+        logger.info("Finished similarity initialization")
 
     def column_candidates(self, for_slot=True):
         if for_slot:
@@ -294,18 +329,6 @@ class SimilarityComputer:
 
 
     def find_most_similar_slot(self, event, delta_heuristics = 0.05) -> dict:
-        if self.weights is not None and "one_slot" in self.weights:
-            weights = self.weights["one_slot"]
-        else:
-            weights = {
-                'slot_is_sim': 0.25,
-                'slot_complete_is_sim': 0.2,
-                'slot_emb': 0.25,
-                'slot_complete_emb': 0.2,
-                'att_is_sim': 0.05,
-                'att_complete_is_sim': 0.05
-            }
-
         compute = self._compute_single_slot_similarity(event)
 
         self.slot_information = {}
@@ -316,29 +339,23 @@ class SimilarityComputer:
 
             slot_value = compute[slot]
 
-            slot_value["slot_sim"] = self.compute_distances(slot_value["slot_sim"])
-            slot_value["slot_complete_sim"] = self.compute_distances(slot_value["slot_complete_sim"])
+            slot_value["slot_sim"] = compute_distances(slot_value["slot_sim"])
+            slot_value["slot_complete_sim"] = compute_distances(slot_value["slot_complete_sim"])
 
             result = 0
-            for w in weights:
-                param = slot_value[w] * weights[w]
-                self.slot_information[s][w] = param
-                self.slot_information[s][w+"_without_weight"] = slot_value[w]
-                result += param
+            for w in self.weights['one_slot']:
+                if self.weights['one_slot'][w] > 0:
+                    param = slot_value[w] * self.weights['one_slot'][w]
+                    self.slot_information[s][w] = param
+                    self.slot_information[s][w+"_without_weight"] = slot_value[w]
+                    result += param
 
             compute[slot] = result
             self.slot_information[s]["total_score"] = compute[slot]
 
-        compute = self._filter_best_similarity(compute, delta_heuristics)
+        compute = _filter_best_similarity(compute, delta_heuristics)
 
         return compute
-
-
-    def _filter_best_similarity(self, similarity_values, delta_heuristics):
-        best_similarity = max(similarity_values.values(), default=0) - delta_heuristics
-        similarity_values = {key: value for (key, value) in similarity_values.items() if value >= best_similarity}
-
-        return similarity_values
 
 
     def perc_conditions_in_cases(self, condition): 
@@ -349,27 +366,6 @@ class SimilarityComputer:
 
 
     def find_most_similar_slots_matching_types(self, event1, event2, delta_heuristics = 0.05) -> dict:
-        if self.weights is not None and "multi_slot" in self.weights:
-            weights = self.weights["multi_slot"]
-        else:
-            weights = {
-                'ev1_$slot_is_sim': 0.05,
-                "ev1_$slot_complete_is_sim": 0.05,
-                'ev1_$slot_emb': 0.07,
-                'ev1_$slot_complete_emb': 0.06,
-                'ev2_$slot_is_sim': 0.05,
-                "ev2_$slot_complete_is_sim": 0.05,
-                'ev2_$slot_emb': 0.07,
-                'ev2_$slot_complete_emb': 0.06,
-
-                "ev1_$att_is_sim": 0.01,
-                "ev1_$att_complete_is_sim": 0.01,
-                "ev2_$att_is_sim": 0.01,
-                "ev2_$att_complete_is_sim": 0.01,
-                "same_type": 0.25,
-                "condition_ratio": 0.25
-            }
-
         compute = self._compute_multi_slot_similarity(event1, event2)
 
         self.slot_information = {}
@@ -382,18 +378,19 @@ class SimilarityComputer:
             slot_value = compute[slot]
 
             self.slot_information[s]["condition_ratio_base"] = slot_value["condition_ratio"]
-            slot_value["condition_ratio"] = (1/(1+ math.exp(-10*self.compute_distances(slot_value["condition_ratio"]))) - 0.5)/0.5
-            slot_value["ev1_$slot_sim"] = self.compute_distances(slot_value["ev1_$slot_sim"])
-            slot_value["ev1_$slot_complete_sim"] = self.compute_distances(slot_value["ev1_$slot_complete_sim"])
-            slot_value["ev2_$slot_sim"] = self.compute_distances(slot_value["ev2_$slot_sim"])
-            slot_value["ev2_$slot_complete_sim"] = self.compute_distances(slot_value["ev2_$slot_complete_sim"])
+            slot_value["condition_ratio"] = (1/(1+ math.exp(-10*compute_distances(slot_value["condition_ratio"]))) - 0.5)/0.5
+            slot_value["ev1_$slot_sim"] = compute_distances(slot_value["ev1_$slot_sim"])
+            slot_value["ev1_$slot_complete_sim"] = compute_distances(slot_value["ev1_$slot_complete_sim"])
+            slot_value["ev2_$slot_sim"] = compute_distances(slot_value["ev2_$slot_sim"])
+            slot_value["ev2_$slot_complete_sim"] = compute_distances(slot_value["ev2_$slot_complete_sim"])
 
             result = 0
-            for w in weights:
-                param = slot_value[w] * weights[w]
-                self.slot_information[s][w] = param
-                self.slot_information[s][w+"_without_weight"] = slot_value[w]
-                result += param
+            for w in self.weights['multi_slot']:
+                if self.weights['multi_slot'][w] > 0:
+                    param = slot_value[w] * self.weights['multi_slot'][w]
+                    self.slot_information[s][w] = param
+                    self.slot_information[s][w+"_without_weight"] = slot_value[w]
+                    result += param
 
 
             #condition_ratio_value = - weight_condition_ratio * (1 - (1/(1+ math.exp(-10*self.compute_distances(slot_value["condition_ratio"]))) - 0.5)/0.5)
@@ -404,20 +401,9 @@ class SimilarityComputer:
             compute[slot] = result
             self.slot_information[s]["total_score"] = compute[slot]
 
-        compute = self._filter_best_similarity(compute, delta_heuristics)
+        compute = _filter_best_similarity(compute, delta_heuristics)
 
         return compute
-
-
-    def compute_distances(self, d):
-        if type(d) is not dict:
-            return d
-
-        weight_internal_distances = 0.65
-        weight_external_distances = 0.35
-
-        return ((d["framework_distance"])) * weight_internal_distances \
-        + ((d["damerauLevenshtein_distance"]  + d["pyjarowinkler_distance"]) / 3) * weight_external_distances
 
 
     def _compute_single_slot_similarity(self, event):
@@ -429,7 +415,9 @@ class SimilarityComputer:
         # single_slot (0,1) -> 1 if slot only has one column and 0 if it has two. (currently it is always 1)
         # condition_ratio (0,1) -> % of times the condition is true
 
+        logger.info(f"compute similarity features for [{event}]")
         similarity_features = self._compute_slot_similarity_features(event, self.slots)
+        logger.info(f"finished compute similarity features for [{event}]")
 
         result = {}
 
@@ -453,8 +441,10 @@ class SimilarityComputer:
         # same_type (0,1) -> 1 if both slots have the same attribute else 0
         # condition_ratio (0,1) -> % of times the metric from/to can be defined (both occur and from is before to)
 
+        logger.info(f"compute similarity features for [{event1}, {event2}]")
         similarity_features_1 = self._compute_slot_similarity_features(event1, self.slots)
         similarity_features_2 = self._compute_slot_similarity_features(event2, self.slots)
+        logger.info(f"finished compute similarity features for [{event1}, {event2}]")
 
         pair_sim_values = {}
         # we add matching pairs
@@ -484,107 +474,33 @@ class SimilarityComputer:
         else:
             return math.log(self.length_[att])
 
-    def get_similarity_vector(self, text1, text2):
-        if (text1.text == '' or text2.text == '') and (text1.text != text2.text):
-            return {
-                "framework_distance": 0,
-                "cosine_distance": 0,
-                "damerauLevenshtein_distance": 0,
-                "pyjarowinkler_distance": 0
-            }
-
-            
-        result = {
-            "framework_distance": text1.similarity(text2) if text1.text != text2.text else 1.0,
-            "cosine_distance": self.get_cosine(text1.text, text2.text) if text1.text != text2.text else 1.0,
-            "damerauLevenshtein_distance": damerauLevenshtein(text1.text, text2.text, similarity=True) if text1.text != text2.text else 1.0,
-            "pyjarowinkler_distance": pyjarowinkler_d.get_jaro_distance(text1.text, text2.text, winkler=True, scaling=0.1) if text1.text != text2.text else 1.0
-        }
-
-        return result
-
-    def _maxsim(self, t, w):        
-        return max([t.similarity(t2) for t2 in w]) if len(w) > 0 else 0
-
-    def _is_sim(self, text_vector_terms, slot_vector_terms, att):
-        sim_text = sum([self._maxsim(term, slot_vector_terms) * self.idf(term.lemma_, att) for term in text_vector_terms]) if len(text_vector_terms) > 0 else 0
-        idf_text = sum([self.idf(term.lemma_, att) for term in text_vector_terms]) if len(text_vector_terms) > 0 else 1
-        sim_slot = sum([self._maxsim(term, text_vector_terms) * self.idf(term.lemma_, att) for term in slot_vector_terms]) if len(slot_vector_terms) > 0 else 0
-        idf_slot = sum([self.idf(term.lemma_, att) for term in slot_vector_terms]) if len(slot_vector_terms) > 0 else 1
-
-        if idf_text == 0:
-            idf_text = 1
-
-        if idf_slot == 0:
-            idf_slot = 1
-
-        return (sim_text/idf_text + sim_slot/idf_slot)/2
-
-
-    def calculate_bart_large_mnli_personalized(self, premise, hypothesis):
-        x = self.tokenizer.encode(premise, hypothesis, return_tensors='pt', truncation='only_first')
-        logits = self.nli_model(x.to(self.device))[0]
-
-        entail_contradiction_logits = logits[:, [0, 2]]
-        probs = entail_contradiction_logits.softmax(dim=1)
-        prob_label_is_true = probs[:, 1]
-
-        return prob_label_is_true.item()
-
 
     def _compute_slot_similarity_features(self, event, slots):
-        text_vector = self.nlp(event)
-        text_vector = Doc(vocab=self.nlp.vocab, words=[word.text for word in text_vector if not (word.is_stop or word.is_punct)])
-        if not text_vector.has_vector:
-            text_vector = self.nlp(event)  
+        matching = [SimMatching(self.nlp, self.idf)]
 
-        event_embedding = self.model.encode(event, convert_to_tensor=True)
-        
-        lemmas_text = set([token.lemma_ for token in text_vector])
+        if "slot_emb" in self.weights['one_slot'] and self.weights['one_slot']["slot_emb"] > 0:
+            matching.append(EmbMatching(self.model, self.embeddings))
+        if "bart_large_mnli_personalized_complete" in self.weights['one_slot'] and self.weights['one_slot']["bart_large_mnli_personalized_complete"] > 0:
+            matching.append(BartMatching(self.tokenizer, self.device, self.nli_model))
+
+        for m in matching:
+            m.encode_event(event)
 
         res = {}
 
         if self.two_step_match:
             for att in list(slots.keys()):
                 similarity_slot = {}
-                cosine_scores = util.cos_sim(event_embedding, self.embeddings[att])
-                cosine_scores_ext = util.cos_sim(event_embedding, self.embeddings[att+"-attrib"])
+
+                for m in matching:
+                    m.encode_att(att)
 
                 for i, slot in enumerate(slots[att]):
-                    slot_vector = self.nlp(preprocess_label(slot.text()))
-                    slot_vector_terms = [term for term in slot_vector if not (term.is_stop or term.is_punct)]
+                    similarity_slot[slot] = {}
 
-                    if slot_vector.vector_norm:
-                        slot_sim = self.get_similarity_vector(text_vector, slot_vector)
-                        
-                    slot_vector_complete = self.nlp(preprocess_label(slot.text_complete()))
-                    if slot_vector_complete.vector_norm:
-                        slot_complete_sim = self.get_similarity_vector(text_vector, slot_vector_complete)
+                    for m in matching:
+                        similarity_slot[slot].update(m.compute_feature(i, slot))
 
-                    slot_complete_vector_terms = [term for term in slot_vector_complete if not (term.is_stop or term.is_punct)]
-
-                    lemmas_slot = set([token.lemma_ for token in slot_vector_terms])
-                    lemmas_slot_complete = set([token.lemma_ for token in slot_complete_vector_terms])
-
-                    idf_slot = [self.idf(term, att) for term in lemmas_slot]
-                    idf_slot_complete = [self.idf(term, att) for term in lemmas_slot_complete]
-                    idf_text = [self.idf(term, att) for term in lemmas_text]
-
-                    hypothesis3 = f'The condition is {preprocess_label(slot.text_complete())}.'
-
-                    similarity_slot[slot] = {
-                        "slot_sim": slot_sim,
-                        "slot_complete_sim": slot_complete_sim,
-                        "slot_is_sim": self._is_sim(text_vector, slot_vector_terms , att),
-                        "slot_complete_is_sim": self._is_sim(text_vector, slot_complete_vector_terms , att),
-                        "slot_emb": cosine_scores[0][i],
-                        "slot_complete_emb": cosine_scores_ext[0][i],
-                        "idf_text": sum(idf_text) / len(idf_text) if len(idf_text) > 0 else 1, 
-                        "idf_slot": sum(idf_slot) / len(idf_slot) if len(idf_slot) > 0 else 1,
-                        "idf_slot_complete": sum(idf_slot_complete) / len(idf_slot_complete),
-                        "single_slot": 1.0 if slot.column2 is None else 0.0,
-                        "bart_large_mnli_personalized_complete": self.calculate_bart_large_mnli_personalized(event, hypothesis3),
-                    }
 
                 if len(similarity_slot) > 0:
                     similarity_att = {
@@ -665,7 +581,7 @@ class SimilarityComputer:
                 the best similarity
         """
         res = self._compute_att_similarity_scores(text, elem_list)            
-        res = self._filter_best_similarity(res, delta_heuristics)
+        res = _filter_best_similarity(res, delta_heuristics)
 
         return res
 
@@ -685,7 +601,7 @@ class SimilarityComputer:
                 delta expressed in percentage allowed to consider candidates other than those with 
                 the best similarity
         """
-        return self.get_best_similarity(text, self.aggr_values.items(), delta_heuristics)
+        return get_best_similarity(self.nlp, text, self.aggr_values.items(), delta_heuristics)
 
     def find_period(self, text, delta_heuristics=0) -> dict:
         """
@@ -702,10 +618,10 @@ class SimilarityComputer:
                 delta expressed in percentage allowed to consider candidates other than those with 
                 the best similarity
         """
-        return self.get_best_similarity(text, self.period_values.items(), delta_heuristics)
+        return get_best_similarity(self.nlp, text, self.period_values.items(), delta_heuristics)
 
     def find_op(self, text, delta_heuristics=0) -> dict:
-        return self.get_best_similarity(text, self.op_values.items(), delta_heuristics)
+        return get_best_similarity(self.nlp, text, self.op_values.items(), delta_heuristics)
 
     def _compute_att_similarity_scores(self, text, attributes):        
         text = text.lower()
@@ -718,7 +634,7 @@ class SimilarityComputer:
             else:
                 att_vector = self.nlp(preprocess_label(att_low))
                 if att_vector.vector_norm:
-                    res[att] = self.get_similarity(text_vector, att_vector)
+                    res[att] = get_similarity(text_vector, att_vector)
         return res
 
     def _compute_similarity_scores(self, event, slots):
@@ -744,11 +660,11 @@ class SimilarityComputer:
                     else:
                         slot_vector = self.nlp(slot.text())
                         if slot_vector.vector_norm:
-                            similarity_att[slot] = self.get_similarity(text_vector, slot_vector)*0.5
+                            similarity_att[slot] = get_similarity(text_vector, slot_vector)*0.5
                         
                         slot_vector = self.nlp(slot.text_complete())
                         if slot_vector.vector_norm:
-                            similarity_att[slot] = self.get_similarity(text_vector, slot_vector)*0.5 + (similarity_att[slot] if slot in similarity_att else 0)                        
+                            similarity_att[slot] = get_similarity(text_vector, slot_vector)*0.5 + (similarity_att[slot] if slot in similarity_att else 0)                        
 
                 if len(similarity_att) > 0:
                     res_temp["atts"][att] = mean(similarity_att.values())
@@ -769,28 +685,9 @@ class SimilarityComputer:
                     slot_vector = self.nlp(slot.text())
                     # check if slot can be properly vectorized
                     if slot_vector.vector_norm:
-                        res[slot] = self.get_similarity(text_vector, slot_vector)
+                        res[slot] = get_similarity(text_vector, slot_vector)
 
         return res
-
-    def get_best_similarity(self, text, values_to_compare, delta_heuristics):
-        text_vector = self.nlp(text)
-        similarities_framework = self.framework_distance(text_vector, values_to_compare)
-        # similarities_cosine = self.cosine_distance(text, values_to_compare)
-        similarities_damerauLevenshtein = self.damerauLevenshtein_distance(text, values_to_compare)
-        similarities_pyjarowinkler = self.pyjarowinkler_distance(text, values_to_compare)
-        #similarities = self.mean_similarities([similarities_framework, similarities_cosine, similarities_damerauLevenshtein, similarities_pyjarowinkler])
-        similarities_fram = {key: value * 0.75 for key, value in similarities_framework.items()}
-        similarities_pydam = {key: mean([value, similarities_pyjarowinkler[key]]) * 0.25 for key, value in similarities_damerauLevenshtein.items()}
-        similarities = {key: value + similarities_pydam[key] for key, value in similarities_fram.items()}
-        return self._filter_best_similarity(similarities, delta_heuristics)
-
-    def get_similarity(self, text1, text2):
-        framework_distance = text1.similarity(text2)
-        #cosine_distance = self.get_cosine(text1.text, text2.text)
-        damerauLevenshtein_distance = damerauLevenshtein(text1.text, text2.text)
-        pyjarowinkler_distance = pyjarowinkler_d.get_jaro_distance(text1.text, text2.text, winkler=True, scaling=0.1)
-        return framework_distance*0.75 + 0.25*mean([damerauLevenshtein_distance, pyjarowinkler_distance])
 
     # The following three methods are not used anymore because they are domain-specifc
     def add_event_class_column(self):
@@ -910,45 +807,228 @@ class SimilarityComputer:
         self.idf_ = idf
         self.length_ = length
 
-    def text_to_vector(self, text):
-        words = self.Word.findall(text)
-        return Counter(words)
 
-    def get_cosine(self, text1, text2):
-        vec1 = self.text_to_vector(text1)
-        vec2 = self.text_to_vector(text2)
-        intersection = set(vec1.keys()) & set(vec2.keys())
-        numerator = sum([vec1[x] * vec2[x] for x in intersection])
-
-        sum1 = sum([vec1[x]**2 for x in vec1.keys()])
-        sum2 = sum([vec2[x]**2 for x in vec2.keys()])
-        denominator = math.sqrt(sum1) * math.sqrt(sum2)
-
-        if not denominator:
-            return 0.0
-        else:
-            return float(numerator) / denominator
-
-    def framework_distance(self, text, values_to_compare):
-        return {k : mean([text.similarity(word) for word in v]) for k, v in values_to_compare}
-
-    def cosine_distance(self, text, values_to_compare):
-        return {k : mean([self.get_cosine(text, word.text) for word in v]) for k, v in values_to_compare}
-
-    def damerauLevenshtein_distance(self, text, values_to_compare):
-        return {k : max([damerauLevenshtein(text, word.text) for word in v]) for k, v in values_to_compare}
-
-    def pyjarowinkler_distance(self, text, values_to_compare):
-        return {k : max([pyjarowinkler_d.get_jaro_distance(text, word.text, winkler=True, scaling=0.1) for word in v]) for k, v in values_to_compare}
-
-    def mean_similarities(self, similarities):
-        return {k : mean([v[k] for v in similarities]) for k in similarities[0]}
-        
     def metric_decoder(self, text):
-        return self.decoder.predict_annotation(text)
+        return self.decoder.predict_annotation(text)       
 
 
 
+def text_to_vector(text):
+    words = WORD.findall(text)
+    return Counter(words)
+
+def get_cosine(text1, text2):
+    vec1 = text_to_vector(text1)
+    vec2 = text_to_vector(text2)
+    intersection = set(vec1.keys()) & set(vec2.keys())
+    numerator = sum([vec1[x] * vec2[x] for x in intersection])
+
+    sum1 = sum([vec1[x]**2 for x in vec1.keys()])
+    sum2 = sum([vec2[x]**2 for x in vec2.keys()])
+    denominator = math.sqrt(sum1) * math.sqrt(sum2)
+
+    if not denominator:
+        return 0.0
+    else:
+        return float(numerator) / denominator
+
+def framework_distance(text, values_to_compare):
+    return {k : mean([text.similarity(word) for word in v]) for k, v in values_to_compare}
+
+def cosine_distance(text, values_to_compare):
+    return {k : mean([get_cosine(text, word.text) for word in v]) for k, v in values_to_compare}
+
+def damerauLevenshtein_distance(text, values_to_compare):
+    return {k : max([damerauLevenshtein(text, word.text) for word in v]) for k, v in values_to_compare}
+
+def pyjarowinkler_distance(text, values_to_compare):
+    return {k : max([pyjarowinkler_d.get_jaro_distance(text, word.text, winkler=True, scaling=0.1) for word in v]) for k, v in values_to_compare}
+
+def mean_similarities(similarities):
+    return {k : mean([v[k] for v in similarities]) for k in similarities[0]}
+        
+
+def get_best_similarity(nlp, text, values_to_compare, delta_heuristics):
+    text_vector = nlp(text)
+    similarities_framework = framework_distance(text_vector, values_to_compare)
+    # similarities_cosine = cosine_distance(text, values_to_compare)
+    similarities_damerauLevenshtein = damerauLevenshtein_distance(text, values_to_compare)
+    similarities_pyjarowinkler = pyjarowinkler_distance(text, values_to_compare)
+    #similarities = mean_similarities([similarities_framework, similarities_cosine, similarities_damerauLevenshtein, similarities_pyjarowinkler])
+    similarities_fram = {key: value * 0.75 for key, value in similarities_framework.items()}
+    similarities_pydam = {key: mean([value, similarities_pyjarowinkler[key]]) * 0.25 for key, value in similarities_damerauLevenshtein.items()}
+    similarities = {key: value + similarities_pydam[key] for key, value in similarities_fram.items()}
+    return _filter_best_similarity(similarities, delta_heuristics)
+
+def get_similarity(text1, text2):
+    framework_distance = text1.similarity(text2)
+    #cosine_distance = self.get_cosine(text1.text, text2.text)
+    damerauLevenshtein_distance = damerauLevenshtein(text1.text, text2.text)
+    pyjarowinkler_distance = pyjarowinkler_d.get_jaro_distance(text1.text, text2.text, winkler=True, scaling=0.1)
+    return framework_distance*0.75 + 0.25*mean([damerauLevenshtein_distance, pyjarowinkler_distance])
+
+def _filter_best_similarity(similarity_values, delta_heuristics):
+    best_similarity = max(similarity_values.values(), default=0) - delta_heuristics
+    similarity_values = {key: value for (key, value) in similarity_values.items() if value >= best_similarity}
+
+    return similarity_values
+
+def compute_distances(d):
+    if type(d) is not dict:
+        return d
+
+    weight_internal_distances = 0.65
+    weight_external_distances = 0.35
+
+    return ((d["framework_distance"])) * weight_internal_distances \
+    + ((d["damerauLevenshtein_distance"]  + d["pyjarowinkler_distance"]) / 3) * weight_external_distances
+
+
+class _Matching:
+    def encode_event(self, event):
+        return
+
+    def encode_att(self, att):
+        return
+    
+    def compute_feature(self, i, slot):
+        return {}
+class EmbMatching(_Matching):
+    def __init__(self, model, embeddings):
+        self.model = model
+        self.embeddings = embeddings
+
+    def encode_event(self, event):
+        self.event_embedding = self.model.encode(event, convert_to_tensor=True)
+    
+    def encode_att(self, att):
+        self.cosine_scores = util.cos_sim(self.event_embedding, self.embeddings[att])
+        self.cosine_scores_ext = util.cos_sim(self.event_embedding, self.embeddings[att+"-attrib"])
+        
+    def compute_feature(self, i, slot):
+        return {
+            "slot_emb": self.cosine_scores[0][i],
+            "slot_complete_emb": self.cosine_scores_ext[0][i],
+        }
+
+class BartMatching(_Matching):
+    def __init__(self, tokenizer, device, nli_model):
+        self.tokenizer = tokenizer
+        self.device = device
+        self.nli_model = nli_model
+
+
+    def encode_event(self, event):
+        self.event = event
+    
+    def compute_feature(self, i, slot):
+        hypothesis3 = f'The condition is {preprocess_label(slot.text_complete())}.'
+
+        return {
+            "bart_large_mnli_personalized_complete": self.calculate_bart_large_mnli_personalized(self.event, hypothesis3),
+        }
+
+    def calculate_bart_large_mnli_personalized(self, premise, hypothesis):
+        x = self.tokenizer.encode(premise, hypothesis, return_tensors='pt', truncation='only_first')
+        logits = self.nli_model(x.to(self.device))[0]
+
+        entail_contradiction_logits = logits[:, [0, 2]]
+        probs = entail_contradiction_logits.softmax(dim=1)
+        prob_label_is_true = probs[:, 1]
+
+        return prob_label_is_true.item()
+
+class SimMatching(_Matching):
+    def __init__(self, nlp, idf):
+        self.nlp = nlp
+        self.idf = idf
+    
+    def encode_event(self, event):
+        self.text_vector = self.nlp(event)
+        self.text_vector = Doc(vocab=self.nlp.vocab, words=[word.text for word in self.text_vector if not (word.is_stop or word.is_punct)])
+        if not self.text_vector.has_vector:
+            self.text_vector = self.nlp(event)  
+
+        self.lemmas_text = set([token.lemma_ for token in self.text_vector])
+        
+
+    def encode_att(self, att):
+        self.att = att
+
+    def compute_feature(self, i, slot):
+        label = preprocess_label(slot.text())
+        if len(label) == 0:
+            label = slot.text()
+        slot_vector = self.nlp(label)
+        slot_vector_terms = [term for term in slot_vector if not (term.is_stop or term.is_punct)]
+
+        slot_sim = get_similarity_vector(self.text_vector, slot_vector)
+            
+        slot_vector_complete = self.nlp(preprocess_label(slot.text_complete()))
+        slot_complete_sim = get_similarity_vector(self.text_vector, slot_vector_complete)
+
+        slot_complete_vector_terms = [term for term in slot_vector_complete if not (term.is_stop or term.is_punct)]
+
+        lemmas_slot = set([token.lemma_ for token in slot_vector_terms])
+        lemmas_slot_complete = set([token.lemma_ for token in slot_complete_vector_terms])
+
+        idf_slot = [self.idf(term, self.att) for term in lemmas_slot]
+        idf_slot_complete = [self.idf(term, self.att) for term in lemmas_slot_complete]
+        idf_text = [self.idf(term, self.att) for term in self.lemmas_text]
+
+        return {
+            "slot_sim": slot_sim,
+            "slot_complete_sim": slot_complete_sim,
+            "slot_is_sim": _is_sim(self.idf, self.text_vector, slot_vector_terms , self.att),
+            "slot_complete_is_sim": _is_sim(self.idf, self.text_vector, slot_complete_vector_terms , self.att),
+            "idf_text": sum(idf_text) / len(idf_text) if len(idf_text) > 0 else 1, 
+            "idf_slot": sum(idf_slot) / len(idf_slot) if len(idf_slot) > 0 else 1,
+            "idf_slot_complete": sum(idf_slot_complete) / len(idf_slot_complete),
+        }
+
+
+def _maxsim(t, w):        
+    return max([t.similarity(t2) for t2 in w]) if len(w) > 0 else 0
+
+def _is_sim(idf, text_vector_terms, slot_vector_terms, att):
+    sim_text = sum([_maxsim(term, slot_vector_terms) * idf(term.lemma_, att) for term in text_vector_terms]) if len(text_vector_terms) > 0 else 0
+    idf_text = sum([idf(term.lemma_, att) for term in text_vector_terms]) if len(text_vector_terms) > 0 else 1
+    sim_slot = sum([_maxsim(term, text_vector_terms) * idf(term.lemma_, att) for term in slot_vector_terms]) if len(slot_vector_terms) > 0 else 0
+    idf_slot = sum([idf(term.lemma_, att) for term in slot_vector_terms]) if len(slot_vector_terms) > 0 else 1
+
+    if idf_text == 0:
+        idf_text = 1
+
+    if idf_slot == 0:
+        idf_slot = 1
+
+    return (sim_text/idf_text + sim_slot/idf_slot)/2
+
+
+def get_similarity_vector(text1, text2):
+    if (text1.text == '' or text2.text == '') and (text1.text != text2.text):
+        return {
+            "framework_distance": 0,
+            "cosine_distance": 0,
+            "damerauLevenshtein_distance": 0,
+            "pyjarowinkler_distance": 0
+        }
+
+        
+    result = {
+        "framework_distance": text1.similarity(text2) if text1.text != text2.text else 1.0,
+        "cosine_distance": get_cosine(text1.text, text2.text) if text1.text != text2.text else 1.0,
+        "damerauLevenshtein_distance": damerauLevenshtein(text1.text, text2.text, similarity=True) if text1.text != text2.text else 1.0,
+        "pyjarowinkler_distance": pyjarowinkler_d.get_jaro_distance(text1.text, text2.text, winkler=True, scaling=0.1) if text1.text != text2.text else 1.0
+    }
+
+    return result
+
+
+
+
+
+WORD = re.compile('\w')
 CAMEL_PATTERN_1 = re.compile('(.)([A-Z][a-z]+)')
 CAMEL_PATTERN_2 = re.compile('([a-z0-9])([A-Z])')
 
@@ -967,4 +1047,7 @@ def preprocess_label(label):
     for part in parts:
         clean = ''.join([i for i in part if not i.isdigit()])
         res.append(clean)
-    return ' '.join(res)
+    result = ' '.join(res)
+    if len(result) == 0:
+        result = label
+    return result

@@ -5,6 +5,7 @@ import urllib
 from os import remove
 from os.path import exists
 from enum import Enum
+import logging
 
 import pandas as pd
 import ppinat.bot.commands as commands
@@ -20,6 +21,7 @@ from ppinat.ppiparser.decoder import load_decoder
 from ppinot4py.model import AppliesTo, RuntimeState, TimeInstantCondition
 from ppinat.models.gcloud import update_models
 
+logger = logging.getLogger(__name__)
 
 ATTRIBUTES = [
     "from", "to", "when", "condition", "filter", "aggregation", "data"
@@ -214,17 +216,24 @@ class InputTest:
 
     def evaluate_matcher(self, similarity, recognized_entity, annotation, goldstandard, type):
         if type == annotation.get_measure_type():
-            if type == "time":
-                metric_result = self.analyse_metric(
-                    commands.TimeMetricCommand(), recognized_entity, similarity, goldstandard, type)
-            elif type == "count":
-                metric_result = self.analyse_metric(
-                    commands.CountMetricCommand(), recognized_entity, similarity, goldstandard, type)
-            elif type == "data":
-                metric_result = self.analyse_metric(
-                    commands.DataMetricCommand(), recognized_entity, similarity, goldstandard, type)
+            # if type == "time":
+            #     metric_result = self.analyse_metric(
+            #         commands.TimeMetricCommand(), recognized_entity, similarity, goldstandard, type)
+            # elif type == "count":
+            #     metric_result = self.analyse_metric(
+            #         commands.CountMetricCommand(), recognized_entity, similarity, goldstandard, type)
+            # elif type == "data":
+            #     metric_result = self.analyse_metric(
+            #         commands.DataMetricCommand(), recognized_entity, similarity, goldstandard, type)
         
-            agg_result = self.aggregation_eval(recognized_entity, similarity, goldstandard)
+            agg_result, agg_command = self.aggregation_eval(recognized_entity, similarity, goldstandard)
+
+            if 'base_measure' in agg_command.partials and agg_command.partials['base_measure'] is not None:
+                metric_result = self.analyse_metric(
+                    agg_command.partials['base_measure'][0], recognized_entity , similarity, goldstandard, type)
+            else:
+                logger.error('base_measure not found in agg_command')
+                metric_result = 'bad'
 
             if metric_result == 'good' and agg_result == 'good':
                 result = 'good'
@@ -255,12 +264,6 @@ class InputTest:
 
 
     def analyse_metric(self, command, recognized_entity, similarity, goldstandard, type):        
-        try:
-            command.match_entities(recognized_entity, similarity)
-        except:
-            print(Fore.RED + "An error ocurred while matching entities" + Fore.RESET)
-            return None
-
         matcher_metric_result = None
         if type == "time":
             matcher_metric_result = self.time_metric_eval(command, goldstandard)
@@ -278,7 +281,13 @@ class InputTest:
         filter_result = None
 
         agg_command = commands.ComputeMetricCommand()
-        agg_command.match_entities(recognized_entity, similarity, infer_agg=True)
+        try: 
+            agg_command.match_entities(recognized_entity, similarity, infer_agg=True)
+        except Exception as e:
+            print(Fore.RED + "An error ocurred while matching entities" + Fore.RESET)
+            logger.exception("Error while matching entities", exc_info=e, stack_info=True)
+            return None, agg_command
+
 
         agg_eval_func = (lambda x: x == goldstandard['aggregation']) if 'aggregation' in goldstandard else None
         agg_result, agg_pos, agg_found = param_eval(agg_eval_func, agg_command, "agg_function")
@@ -297,7 +306,7 @@ class InputTest:
         else:
             aggregation_result = 'partial'
 
-        return aggregation_result
+        return aggregation_result, agg_command
 
     def data_metric_eval(self, command, goldstandard):
         data_result, data_pos, data_found = param_eval(lambda x: comparing_attributes(goldstandard["data_condition"], x), command, "attribute")
@@ -434,6 +443,8 @@ def load_similarity(log, metrics, parsing_model, weights):
     LOG = load_log(log, id_case="ID", time_column="DATE",
                 activity_column="ACTIVITY")
 
+    logger.info(f"Loading parser {parsing_model}... ")
+
     if parsing_model == "general":
         TOKEN_CLASSIFIER = './ppinat/models/GeneralClassifier'
         DECODER = load_general_transformer(TOKEN_CLASSIFIER)
@@ -452,8 +463,9 @@ def load_similarity(log, metrics, parsing_model, weights):
     else:
         TRAINING_FILE = 'input/parser_training/parser_training_data.json'
         PARSER_SERIAL_FILE = 'input/parser_training/parser_serialized.p'
-        DECODER, NLP = load_decoder(TRAINING_FILE, PARSER_SERIAL_FILE)
+        DECODER= load_decoder(NLP, TRAINING_FILE, PARSER_SERIAL_FILE)
 
+    logger.info("Loading similarity computer...")
     SIMILARITY = SimilarityComputer(LOG, NLP, metric_decoder=DECODER, weights = weights)
     return SIMILARITY
 

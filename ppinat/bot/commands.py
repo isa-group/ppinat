@@ -407,11 +407,13 @@ class TimeMetricCommand(b.PPIBotCommand):
             self.save("conditional_metric", matched_condition)
 
         if only_text is not None:
+            logger.info(f"TimeMetricCommand - Matching for [only:{only_text}]")
             self.only_text_time_metric = True
 
-            (cond, cond_neg) = t.InstantCondition.match_pair(similarity, only_text, type='negation')
-            (start, cond2_beg) = t.InstantCondition.match_pair(similarity, only_text, type='begin')
-            (cond1_end, end) = t.InstantCondition.match_pair(similarity, only_text, type='end')
+            result = t.InstantCondition.match_special_pair(similarity, only_text, type=['negation', 'begin', 'end'])
+            (cond, cond_neg) = result[0]
+            (start, cond2_beg) = result[1]
+            (cond1_end, end) = result[2]
         
             cond1 = ([start] + cond[0], cond[1])
             cond2 = (cond[0] + cond_neg[0] + [end], cond[1] + cond_neg[1])
@@ -423,7 +425,7 @@ class TimeMetricCommand(b.PPIBotCommand):
 
         if from_text is not None and to_text is not None:
             logger.info(
-                f"Matching log for [from:{from_text}] and [to:{to_text}]")
+                f"TimeMetricCommand - Matching for [from:{from_text}] and [to:{to_text}]")
             (cond1, cond2) = t.InstantCondition.match_pair(
                 similarity, from_text, to_text)
 
@@ -435,12 +437,14 @@ class TimeMetricCommand(b.PPIBotCommand):
             return True
 
         elif from_text is not None:
-            (cond, end) = t.InstantCondition.match_pair(similarity, from_text, type='end')
+            logger.info(f"TimeMetricCommand - Matching for [from:{from_text}]")
+            (cond, end) = next(t.InstantCondition.match_special_pair(similarity, from_text, type=['end']))
             self.save_or_unknown("from_cond", cond, from_text, save_alternatives=True)
             self.save("to_cond", ([end],[]), save_alternatives=True)
 
         elif to_text is not None:
-            (start, cond) = t.InstantCondition.match_pair(similarity, to_text, type='begin')
+            logger.info(f"TimeMetricCommand - Matching for [to:{to_text}]")
+            (start, cond) = next(t.InstantCondition.match_special_pair(similarity, to_text, type=['begin']))
             self.save("from_cond", ([start],[]), save_alternatives=True)
             self.save_or_unknown("to_cond", cond, to_text, save_alternatives=True)
 
@@ -541,6 +545,9 @@ class CountMetricCommand(b.PPIBotCommand):
         conditional_attribute_text = text_by_tag(annotation, "AttributeValue")
         aggregation = annotation.get_aggregation_function()
 
+        logger.info(f"CountMetricCommand - Matching entities")
+
+
         if conditional_text is not None and conditional_attribute_text is not None:
             entity = {
                 "operand": conditional_text,
@@ -638,6 +645,9 @@ class DataMetricCommand(b.PPIBotCommand):
 
         attribute_name = text_by_tag(annotation, "AttributeName")
         conditional_attribute_text = text_by_tag(annotation, "AttributeValue")
+
+        logger.info(f"DataMetricCommand - Matching entities")
+
 
         if attribute_name is not None:
             attr = t.LogAttribute.match(attribute_name, similarity)
@@ -778,7 +788,7 @@ class ComputeMetricCommand(b.PPIBotCommand):
             return super().match_entities(result, similarity)
         else:
             annotation: PPIAnnotation = similarity.metric_decoder(result.text)
-            logger.info(f"Matching entities for annotation: {annotation}")
+            logger.info(f"ComputeMetricCommand - Matching entities for annotation: {annotation}")
 
             self.metric_type = annotation.get_measure_type()
             
@@ -795,13 +805,14 @@ class ComputeMetricCommand(b.PPIBotCommand):
                 command_type = None
 
             if command_type is not None:
-                self.save_partial(
+                found_command, _ = self.save_partial(
                     "base_measure",
                     command_type=command_type,
                     context=None,
                     entities=result,
                     similarity=similarity
                 )
+                logger.info(f"ComputeMetricCommand - Base command found ({found_command})")
 
             matched_agg = self.match("agg_function", annotation.get_aggregation_function(), similarity)
             if not matched_agg and infer_agg:

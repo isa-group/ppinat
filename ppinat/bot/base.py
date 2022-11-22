@@ -297,6 +297,7 @@ class PPIBotCommand():
     def save_partial(self, param_name, command_type, context, entities, similarity):
         command = resolve_command(command_type, context, entities, similarity, expected=self.parameters[param_name].param_type)
         self.partials.update({param_name: (command, context)})
+        return (command, context)
 
     def get(self, param_name, get_alternatives=False):
         result = self.values[param_name] if param_name in self.values else None
