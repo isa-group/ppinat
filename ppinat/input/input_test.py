@@ -89,12 +89,56 @@ class Evaluation:
             return 0
         return float(self.true_positive(strict)) / float(self.true_positive(strict) + self.false_negative())
 
-class InputTest:
-    def __init__(self, args, dataset, parsing_model, other=None):
+
+class TestExecution:
+    def __init__(self, args, dataset, parsing_model, matching_models):
         if not exists(dataset):
             raise RuntimeError(
                 f"File provided does not exist: {dataset}")
 
+        with open(dataset, "r") as j:
+            data = json.load(j)
+
+            self.seleted_model = parsing_model
+            if self.seleted_model == "general":
+                print("Using general token classification model")
+            elif self.seleted_model == "specific":
+                print("Using specific token classification model")
+            elif self.seleted_model == "perfect":
+                print("Using perfect metric decoder")
+            else:
+                print("Using viterbi decoder")
+
+            self.result = {k: InputTest() for k in matching_models}
+
+            datasets = data["datasets"]
+            for d_name in datasets:
+                metrics = data["metrics"]
+
+                print(Fore.WHITE + "Loading dataset: " + d_name + Fore.RESET)
+                log_file = load_dataset(datasets[d_name])
+                print(Fore.GREEN + "Loaded" + Fore.RESET)
+
+                print(Fore.WHITE + "Loading similarity computer: " + Fore.RESET)
+                SIMILARITY = load_similarity(log_file, metrics, self.seleted_model, None)
+                print(Fore.GREEN + "Loaded" + Fore.RESET)
+
+                for model_name in matching_models:
+                    SIMILARITY.weights = matching_models[model_name]
+                    self.result[model_name].evaluate(d_name, metrics, SIMILARITY)
+
+            for model_name in matching_models:
+                self.result[model_name].finish()
+            
+
+
+
+
+        
+        
+
+class InputTest:
+    def __init__(self):
         self.ppi_results = {
             "good": 0,
             "partial": 0,
@@ -126,33 +170,7 @@ class InputTest:
         self.goldstandard_atts = {k: 0 for k in ATTRIBUTES}
         self.identified_atts = {k: 0 for k in ATTRIBUTES}
 
-        with open(dataset, "r") as j:
-            data = json.load(j)
-
-            self.seleted_model = parsing_model
-            if self.seleted_model == "general":
-                print("Using general token classification model")
-            elif self.seleted_model == "specific":
-                print("Using specific token classification model")
-            elif self.seleted_model == "perfect":
-                print("Using perfect metric decoder")
-            else:
-                print("Using viterbi decoder")
-
-            table_summary = []
-
-            datasets = data["datasets"]
-            for d_name in datasets:
-                metrics = data["metrics"]
-
-                print(Fore.WHITE + "Loading dataset: " + d_name + Fore.RESET)
-                log_file = load_dataset(datasets[d_name])
-                print(Fore.GREEN + "Loaded" + Fore.RESET)
-
-                print(Fore.WHITE + "Loading similarity computer: " + Fore.RESET)
-                weights = other["weights"] if "weights" in other else None
-                SIMILARITY = load_similarity(log_file, metrics, self.seleted_model, weights)
-                print(Fore.GREEN + "Loaded" + Fore.RESET)
+    def evaluate(self, d_name, metrics, SIMILARITY):
 
                 print(Fore.WHITE + "Analyzing metrics..." + Fore.RESET)
                 for m in filter(lambda x: (x["dataset"] == d_name or d_name in x["dataset"]) and ("goldstandard" in x and d_name in x["goldstandard"]), metrics):
@@ -173,6 +191,8 @@ class InputTest:
             # if args.verbosity:
             #     excel = pd.DataFrame(table_summary)
             #     excel.to_csv("input/info.csv")
+    
+    def finish(self):
 
             print(f"{Fore.YELLOW}-------------GENERAL INFO-------------{Fore.RESET}")
             print(f"Threshold 'a': {str(bottypes.BaseMetric.threshold_a)}")

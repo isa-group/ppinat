@@ -336,15 +336,14 @@ for dataset in datasets:
     matching_attrib_results = []
 
     for parsing_model in parsing:
-        for matching_model in matching:
-            other = {
-                "weights": matching[matching_model]
-            }
 
-            print(f"---------- {parsing_model} / {matching_model} ----------")
-            test = input_test.InputTest(
-                args=args, dataset=dataset, parsing_model=parsing_model, other=other)
+        print(f"---------- {parsing_model}  ----------")
+        test_execution = input_test.TestExecution(
+            args=args, dataset=dataset, parsing_model=parsing_model, matching_models = matching)
 
+            
+        for matching_model in test_execution.result:
+            test = test_execution[matching_model]
 
             parsing_metrics_results.append({
                 "parsing_type": parsing_model,
