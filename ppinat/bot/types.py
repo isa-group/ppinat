@@ -638,7 +638,7 @@ class LogValue(b.PPIBotType):
         self.value = value
 
     @staticmethod
-    def match(text, similarity, attribute):
+    def match(text, similarity: SimilarityComputer, attribute):
         if text is None:
             return None
 

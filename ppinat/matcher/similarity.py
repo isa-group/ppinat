@@ -335,7 +335,7 @@ class SimilarityComputer:
 
 
     def _filter_best_similarity(self, similarity_values, delta_heuristics):
-        best_similarity = max(similarity_values.values()) - delta_heuristics
+        best_similarity = max(similarity_values.values(), default=0) - delta_heuristics
         similarity_values = {key: value for (key, value) in similarity_values.items() if value >= best_similarity}
 
         return similarity_values
@@ -709,7 +709,7 @@ class SimilarityComputer:
 
     def _compute_att_similarity_scores(self, text, attributes):        
         text = text.lower()
-        text_vector = self.nlp(text)
+        text_vector = self.nlp(preprocess_label(text))
         res = {}
         for att in attributes:
             att_low = att.lower() if callable(getattr(att, "lower", None)) else att
