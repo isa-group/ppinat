@@ -644,6 +644,7 @@ class LogValue(b.PPIBotType):
 
         possible_values: dict = similarity.find_most_similar_value(
             text, attribute.value, 0.7)
+        print(f"LogValue - match: {attribute.value} / {possible_values}")
         possible_values_sorted = {k: v for k, v in sorted(
             possible_values.items(), key=lambda item: item[1], reverse=True)}
         return get_tuple_by_threshold(LogValue.threshold_a, LogValue.threshold_b, possible_values_sorted, lambda value_name: LogValue(value_name))
