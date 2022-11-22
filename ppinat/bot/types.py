@@ -342,20 +342,22 @@ def get_tuple_by_threshold(threshold_a, threshold_b, possible_attributes, parser
     alt_match_a = []
     alt_match_b = []
 
-    try:
-        values = np.array([pv.cpu() for pv in possible_attributes.values()][:top_k]) / soft_max_temp
-    except:
-        values = np.array(list(possible_attributes.values())
-                          [:top_k]) / soft_max_temp
-    softmax = np.exp(values) / np.sum(np.exp(values))
-    rel_a = np.max(softmax) * (1 - threshold_a)
-    rel_b = np.max(softmax) * (1 - threshold_b)
+    if len(possible_attributes) > 0:
+        try:
+            values = np.array([pv.cpu() for pv in possible_attributes.values()][:top_k]) / soft_max_temp
+        except:
+            values = np.array(list(possible_attributes.values())
+                                [:top_k]) / soft_max_temp
+        softmax = np.exp(values) / np.sum(np.exp(values))
+        rel_a = np.max(softmax) * (1 - threshold_a)
+        rel_b = np.max(softmax) * (1 - threshold_b)
 
-    for k, v in zip(possible_attributes, softmax):
-        if v > rel_a:
-            alt_match_a.append(parser(k))
-        if v > rel_b and v < rel_a:
-            alt_match_b.append(parser(k))
+        for k, v in zip(possible_attributes, softmax):
+            if v > rel_a:
+                alt_match_a.append(parser(k))
+            if v > rel_b and v < rel_a:
+                alt_match_b.append(parser(k))
+
     return alt_match_a, alt_match_b
 
 
