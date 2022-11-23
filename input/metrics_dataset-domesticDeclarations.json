@@ -114,7 +114,7 @@
           "count_condition": {
             "attribute": "ACTIVITY",
             "operator": "==",
-            "value": "Declaration REJECTED by ADMINISTRATION"
+            "value": "Declaration REJECTED by PRE_APROVER"
           }
         }
       }
@@ -135,7 +135,7 @@
           "count_condition": {
             "attribute": "ACTIVITY",
             "operator": "==",
-            "value": "Declaration REJECTED by ADMINISTRATION"
+            "value": "Declaration REJECTED by PRE_APROVER"
           },
           "condition": {
             "operator": "gt",
@@ -221,7 +221,7 @@
       }
     },
     {
-      "description": "The % of the requests the director approves",      
+      "description": "The % of requests the director approves",      
       "former_description": "The director should approve at most the 5% of the requests",
       "type": "count",
       "dataset": "domesticDeclarations",
@@ -356,7 +356,7 @@
           "count_condition": {
             "attribute": "ACTIVITY",
             "operator": "==",
-            "value": "Declaration REJECTED by ADMINISTRATION"
+            "value": "Declaration REJECTED by EMPLOYEE"
           }
         }
       }
@@ -558,7 +558,7 @@
           "count_condition": {
             "attribute": "ACTIVITY",
             "operator": "==",
-            "value": "Declaration REJECTED by ADMINISTRATION"
+            "value": "Declaration REJECTED by EMPLOYEE"
           },
           "condition": {
             "operator": "gt",
@@ -594,12 +594,12 @@
       }
     },
     {
-      "description": "Percentage of declarations are approved",
+      "description": "Percentage of declarations that are approved",
       "type": "count",
       "dataset": "domesticDeclarations",
       "slots": {
         "AGR": "Percentage of",
-        "CE": "declarations are approved"
+        "CE": "declarations that are approved"
       },
       "goldstandard": {
         "domesticDeclarations": {
@@ -618,13 +618,13 @@
       }
     },
     {
-      "description": "Average costs per travel",
+      "description": "Average costs per trip",
       "type": "data",
       "dataset": "domesticDeclarations",
       "slots": {
         "AGR": "Average",
         "AttributeName": "costs",
-        "GBC": "travel"
+        "GBC": "trip"
       },
       "goldstandard": {
         "domesticDeclarations": {
@@ -652,6 +652,10 @@
             "attribute": "ACTIVITY",
             "operator": "==",
             "value": "Payment Handled"
+          },
+          "period": {
+            "type": "time",
+            "window": "year"
           }
         }
       }
