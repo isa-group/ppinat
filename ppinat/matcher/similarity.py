@@ -230,6 +230,8 @@ class SimilarityComputer:
 
         self.id_case = log.id_case
         self.time_column = log.time_column
+        self.activity = log.activity_column
+        self.resource = "org:role"
         #self.log = log.as_eventlog()
         self.df: pd.DataFrame = log.as_dataframe()
 
@@ -769,7 +771,6 @@ class SimilarityComputer:
 
                     embeddings[column] = self.model.encode([preprocess_label(v) for v in values], convert_to_tensor=True)
                     embeddings[column+"-attrib"] = self.model.encode([column + " " + preprocess_label(v) for v in values], convert_to_tensor=True)
-                    
 
             for slot1 in slot_condition:
                 for slot2 in slot_condition:
@@ -927,9 +928,11 @@ class BartMatching(_Matching):
     
     def compute_feature(self, i, slot):
         hypothesis3 = f'The condition is {preprocess_label(slot.text_complete())}.'
+        hypo_single = f'It refers to {preprocess_label(slot.text())}'
 
         return {
-            "bart_large_mnli_personalized_complete": self.calculate_bart_large_mnli_personalized(self.event, hypothesis3),
+            "bart_large_mnli_personalized": self.calculate_bart_large_mnli_personalized(self.event, hypo_single),
+            "bart_large_mnli_personalized_complete": self.calculate_bart_large_mnli_personalized(self.event, hypothesis3)
         }
 
     def calculate_bart_large_mnli_personalized(self, premise, hypothesis):
@@ -944,7 +947,7 @@ class BartMatching(_Matching):
 
     @staticmethod
     def list_features():
-        return ["bart_large_mnli_personalized_complete"]
+        return ["bart_large_mnli_personalized_complete", "bart_large_mnli_personalized"]
 
 
 class SimMatching(_Matching):

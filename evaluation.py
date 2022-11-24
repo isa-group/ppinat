@@ -67,7 +67,8 @@ if "hs" in matching:
                     "slot_complete_is_sim": x * (1-att) * complete,
                     "slot_emb": y * (1-att) * (1 - complete),
                     "slot_complete_emb": y * (1-att) * (complete),
-                    "bart_large_mnli_personalized_complete": z * (1-att),
+                    "bart_large_mnli_personalized": z * (1-att) * (1-complete),
+                    "bart_large_mnli_personalized_complete": z * (1-att) * complete,
                     "att_is_sim": att * (1 - complete),
                     "att_complete_is_sim": att * (complete)
                 }
