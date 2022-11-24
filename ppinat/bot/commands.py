@@ -823,7 +823,13 @@ class ComputeMetricCommand(b.PPIBotCommand):
             # groupby_text = annotation.get_chunk_by_tag("GBC")
             if text_by_tag(annotation, "GBC"):
                 self.groupby = t.LogAttribute.match(text_by_tag(annotation, "GBC"), similarity)
-                self.period = t.Period.match(text_by_tag(annotation, "GBC"), similarity)
+
+                if len(self.groupby[0]) > 0:
+                    if self.groupby[0][0].value == similarity.time_column:
+                        self.period = t.Period.match(text_by_tag(annotation, "GBC"), similarity)
+                        self.groupby = None
+                else:
+                    self.period = t.Period.match(text_by_tag(annotation, "GBC"), similarity)
 
             denominator_text = text_by_tag(annotation, "FDE")
             if denominator_text is not None:

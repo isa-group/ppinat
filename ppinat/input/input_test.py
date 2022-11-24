@@ -292,12 +292,12 @@ class InputTest:
         print_results("filter", filter_pos, filter_found)
         self.matching_attribute["filter"].add_value(filter_result)
 
-        period_eval_func = (lambda x: x.value == goldstandard["period"]["window"] if x is not None else False) if ("period" in goldstandard) else None
+        period_eval_func = (lambda x: x == goldstandard["period"]["window"]) if ("period" in goldstandard) else None
         period_result, period_pos, period_found = internal_eval(period_eval_func, agg_command.period)
         print_results("period", period_pos, period_found)
         self.matching_attribute["period"].add_value(period_result)
 
-        group_eval_func = (lambda x: x.value == goldstandard["groupby"] if x is not None else False) if ("groupby" in goldstandard) else None
+        group_eval_func = (lambda x: x == goldstandard["groupby"]) if ("groupby" in goldstandard) else None
         groupby_result, groupby_pos, groupby_found = internal_eval(group_eval_func, agg_command.groupby)
         print_results("groupby", groupby_pos, groupby_found)
         self.matching_attribute["groupby"].add_value(groupby_result)
@@ -710,7 +710,7 @@ def compute_evaluation_result(goldstandard, found_values):
     return result, position, found_values
 
 def internal_eval(goldstandard, value):
-    found_values = [value] if value is not None else []
+    found_values = value[0] + value[1] if value is not None else []
     return compute_evaluation_result(goldstandard, found_values)
 
 
