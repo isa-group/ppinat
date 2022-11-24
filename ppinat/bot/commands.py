@@ -438,13 +438,13 @@ class TimeMetricCommand(b.PPIBotCommand):
 
         elif from_text is not None:
             logger.info(f"TimeMetricCommand - Matching for [from:{from_text}]")
-            (cond, end) = next(t.InstantCondition.match_special_pair(similarity, from_text, type=['end']))
+            (cond, end) = t.InstantCondition.match_special_pair(similarity, from_text, type=['end'])[0]
             self.save_or_unknown("from_cond", cond, from_text, save_alternatives=True)
             self.save("to_cond", ([end],[]), save_alternatives=True)
 
         elif to_text is not None:
             logger.info(f"TimeMetricCommand - Matching for [to:{to_text}]")
-            (start, cond) = next(t.InstantCondition.match_special_pair(similarity, to_text, type=['begin']))
+            (start, cond) = t.InstantCondition.match_special_pair(similarity, to_text, type=['begin'])[0]
             self.save("from_cond", ([start],[]), save_alternatives=True)
             self.save_or_unknown("to_cond", cond, to_text, save_alternatives=True)
 
