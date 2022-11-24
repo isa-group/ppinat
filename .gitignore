@@ -129,6 +129,7 @@ dmypy.json
 .pyre/
 
 input/event_logs
+results/
 
 #models
 ppinat/models/CountModel
