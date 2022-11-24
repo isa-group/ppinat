@@ -24,7 +24,7 @@ from ppinat.models.gcloud import update_models
 logger = logging.getLogger(__name__)
 
 ATTRIBUTES = [
-    "from", "to", "when", "condition", "filter", "aggregation", "data"
+    "from", "to", "when", "condition", "filter", "aggregation", "data", "period", "groupby"
 ]
 
 TAGS = [
@@ -216,15 +216,6 @@ class InputTest:
 
     def evaluate_matcher(self, similarity, recognized_entity, annotation, goldstandard, type):
         if type == annotation.get_measure_type():
-            # if type == "time":
-            #     metric_result = self.analyse_metric(
-            #         commands.TimeMetricCommand(), recognized_entity, similarity, goldstandard, type)
-            # elif type == "count":
-            #     metric_result = self.analyse_metric(
-            #         commands.CountMetricCommand(), recognized_entity, similarity, goldstandard, type)
-            # elif type == "data":
-            #     metric_result = self.analyse_metric(
-            #         commands.DataMetricCommand(), recognized_entity, similarity, goldstandard, type)
         
             agg_result, agg_command = self.aggregation_eval(recognized_entity, similarity, goldstandard)
 
@@ -289,15 +280,27 @@ class InputTest:
             return None, agg_command
 
 
+        # Agg function evaluation
         agg_eval_func = (lambda x: x == goldstandard['aggregation']) if 'aggregation' in goldstandard else None
         agg_result, agg_pos, agg_found = param_eval(agg_eval_func, agg_command, "agg_function")
         print_results("aggregation", agg_pos, agg_found)
         self.matching_attribute["aggregation"].add_value(agg_result)
 
+        # Filter (denominator) evaluation
         filter_eval_func = (lambda x: comparing_conditions(goldstandard["filter"], x)) if "filter" in goldstandard else None
         filter_result, filter_pos, filter_found = param_eval(filter_eval_func, agg_command, "denominator")
         print_results("filter", filter_pos, filter_found)
         self.matching_attribute["filter"].add_value(filter_result)
+
+        period_eval_func = (lambda x: x.value == goldstandard["period"]["window"] if x is not None else False) if ("period" in goldstandard) else None
+        period_result, period_pos, period_found = internal_eval(period_eval_func, agg_command.period)
+        print_results("period", period_pos, period_found)
+        self.matching_attribute["period"].add_value(period_result)
+
+        group_eval_func = (lambda x: x.value == goldstandard["groupby"] if x is not None else False) if ("groupby" in goldstandard) else None
+        groupby_result, groupby_pos, groupby_found = internal_eval(group_eval_func, agg_command.groupby)
+        print_results("groupby", groupby_pos, groupby_found)
+        self.matching_attribute["groupby"].add_value(groupby_result)
 
         if agg_result.is_ok() and filter_result.is_ok():
             aggregation_result = 'good'
@@ -680,6 +683,9 @@ def param_eval(goldstandard, command, command_param):
             command.alt_match_b[command_param] if command_param in command.alt_match_b else [
         ]
 
+    return compute_evaluation_result(goldstandard, found_values)
+
+def compute_evaluation_result(goldstandard, found_values):
     if goldstandard is None:
         if found_values:
             result = EvalResult.NOK2
@@ -702,6 +708,11 @@ def param_eval(goldstandard, command, command_param):
             result = EvalResult.P1    
 
     return result, position, found_values
+
+def internal_eval(goldstandard, value):
+    found_values = [value] if value is not None else []
+    return compute_evaluation_result(goldstandard, found_values)
+
 
 def condition_eval(goldstandard, command):
     result = None

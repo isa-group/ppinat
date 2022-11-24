@@ -655,7 +655,7 @@
           },
           "period": {
             "type": "time",
-            "window": "year"
+            "window": "1Y"
           }
         }
       }

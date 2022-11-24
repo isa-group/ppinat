@@ -410,7 +410,6 @@ class Period(b.PPIBotType):
             value = int(period["value"])
         except:
             value = 1
-            return
 
         return get_tuple_by_threshold(LogAttribute.threshold_a, LogAttribute.threshold_b, possible_periods_sorted, lambda period_name: Period(f"{value}{period_name}"))
 

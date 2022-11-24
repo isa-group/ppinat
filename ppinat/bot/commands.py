@@ -772,6 +772,7 @@ class ComputeMetricCommand(b.PPIBotCommand):
         super(ComputeMetricCommand, self).__init__(
             context, expected, situation, intent)
         self.groupby = None
+        self.period = None
 
     @classmethod
     def match_intent_condition(cls, intent, entities):
@@ -820,7 +821,9 @@ class ComputeMetricCommand(b.PPIBotCommand):
 
 
             # groupby_text = annotation.get_chunk_by_tag("GBC")
-            self.groupby = t.LogAttribute.match(text_by_tag(annotation, "GBC"), similarity)
+            if text_by_tag(annotation, "GBC"):
+                self.groupby = t.LogAttribute.match(text_by_tag(annotation, "GBC"), similarity)
+                self.period = t.Period.match(text_by_tag(annotation, "GBC"), similarity)
 
             denominator_text = text_by_tag(annotation, "FDE")
             if denominator_text is not None:
