@@ -1,12 +1,17 @@
 {
   "datasets": [
-    "./input/metrics_dataset-traffic-test.json"
+    "./input/metrics_dataset-traffic-test.json",
+    "./input/metrics_dataset-domesticDeclarations.json"
   ],
   "datasetsall": [
     "./input/metrics_dataset-traffic-test.json",
+    "./input/metrics_dataset-domesticDeclarations.json",
     "./input/metrics_dataset.json"
   ],
   "parsing": [
+    "viterbi",
+    "specific",
+    "general",
     "perfect"
   ],
   "parsingall": [
@@ -16,73 +21,45 @@
     "perfect"
   ],
   "matching": {
-    "emb_is": {
-      "one_slot": {
-        "slot_is_sim": 0.25,
-        "slot_complete_is_sim": 0.2,
-        "slot_emb": 0.25,
-        "slot_complete_emb": 0.2,
-        "att_is_sim": 0.05,
-        "att_complete_is_sim": 0.05
-      },
-      "multi_slot": {
-        "ev1_$slot_is_sim": 0.05,
-        "ev1_$slot_complete_is_sim": 0.05,
-        "ev1_$slot_emb": 0.07,
-        "ev1_$slot_complete_emb": 0.06,
-        "ev2_$slot_is_sim": 0.05,
-        "ev2_$slot_complete_is_sim": 0.05,
-        "ev2_$slot_emb": 0.07,
-        "ev2_$slot_complete_emb": 0.06,
-        "ev1_$att_is_sim": 0.01,
-        "ev1_$att_complete_is_sim": 0.01,
-        "ev2_$att_is_sim": 0.01,
-        "ev2_$att_complete_is_sim": 0.01,
-        "same_type": 0.25,
-        "condition_ratio": 0.25
+    "is_0.25__emb_0.5__bart_0.25__c_0.5__att_0.1__mh_0.25": {
+      "$gen": {
+        "iss": 0.25,
+        "emb": 0.5,
+        "bart": 0.25,
+        "complete": 0.5,
+        "att": 0.1,
+        "multi_heur": 0.25
       }
     },
-    "only_bart": { 
-      "one_slot": {
-        "bart_large_mnli_personalized":0.45,
-        "bart_large_mnli_personalized_complete":0.45,
-        "att_is_sim": 0.05,
-        "att_complete_is_sim": 0.05
-      },
-      "multi_slot": {
-        "ev1_$bart_large_mnli_personalized": 0.13,
-        "ev2_$bart_large_mnli_personalized": 0.13,
-        "ev1_$bart_large_mnli_personalized_complete": 0.12,
-        "ev2_$bart_large_mnli_personalized_complete": 0.12,
-        "same_type": 0.25,
-        "condition_ratio": 0.25      
+    "is_0.25__emb_0.5__bart_0.25__c_0.5__att_0__mh_0.25": {
+      "$gen": {
+        "iss": 0.25,
+        "emb": 0.5,
+        "bart": 0.25,
+        "complete": 0.5,
+        "att": 0,
+        "multi_heur": 0.25
       }
     },
-    "emb_bart": {
-      "one_slot": {
-        "slot_is_sim": 0.25,
-        "slot_complete_is_sim": 0.2,
-        "bart_large_mnli_personalized":0.23,
-        "bart_large_mnli_personalized_complete":0.22,
-        "att_is_sim": 0.05,
-        "att_complete_is_sim": 0.05
-      },
-      "multi_slot": {
-        "ev1_$slot_is_sim": 0.05,
-        "ev1_$slot_complete_is_sim": 0.05,
-        "ev1_$bart_large_mnli_personalized": 0.07,
-        "ev1_$bart_large_mnli_personalized_complete": 0.06,
-        "ev2_$slot_is_sim": 0.05,
-        "ev2_$slot_complete_is_sim": 0.05,
-        "ev2_$bart_large_mnli_personalized": 0.07,
-        "ev2_$bart_large_mnli_personalized_complete": 0.06,
-        "ev1_$att_is_sim": 0.01,
-        "ev1_$att_complete_is_sim": 0.01,
-        "ev2_$att_is_sim": 0.01,
-        "ev2_$att_complete_is_sim": 0.01,
-        "same_type": 0.25,
-        "condition_ratio": 0.25
-      }
+    "is_0.5__emb_0.25__bart_0.25__c_0.5__att_0.1__mh_0.25": {
+      "$gen": {
+        "iss": 0.5,
+        "emb": 0.25,
+        "bart": 0.25,
+        "complete": 0.5,
+        "att": 0.1,
+        "multi_heur": 0.25
+      }      
+    },
+    "is_0.5__emb_0.25__bart_0.25__c_0.5__att_0.1__mh_0.5": {
+      "$gen": {
+        "iss": 0.5,
+        "emb": 0.25,
+        "bart": 0.25,
+        "complete": 0.5,
+        "att": 0.1,
+        "multi_heur": 0.5
+      }      
     }
   }
 }
