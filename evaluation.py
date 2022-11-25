@@ -100,8 +100,8 @@ if "hs" in matching:
     matching = create_search_grid(matching["hs"])
 else:
     for key in matching:
-        if "$gen" in matching["key"]:
-            matching["key"] = generate_weights(**matching["key"]["$gen"])
+        if "$gen" in matching[key]:
+            matching[key] = generate_weights(**matching[key]["$gen"])
 
 for dataset in datasets:
     parsing_metrics_results = []
