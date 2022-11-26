@@ -9,9 +9,7 @@
     "./input/metrics_dataset.json"
   ],
   "parsing": [
-    "viterbi",
     "specific",
-    "general",
     "perfect"
   ],
   "parsingall": [
@@ -21,45 +19,15 @@
     "perfect"
   ],
   "matching": {
-    "is_0.25__emb_0.5__bart_0.25__c_0.5__att_0.1__mh_0.25": {
+    "is_0.25__emb_0.5__bart_0.25__c_0.5__att_0.2__mh_0.25": {
       "$gen": {
         "iss": 0.25,
         "emb": 0.5,
         "bart": 0.25,
         "complete": 0.5,
-        "att": 0.1,
+        "att": 0.2,
         "multi_heur": 0.25
       }
-    },
-    "is_0.25__emb_0.5__bart_0.25__c_0.5__att_0__mh_0.25": {
-      "$gen": {
-        "iss": 0.25,
-        "emb": 0.5,
-        "bart": 0.25,
-        "complete": 0.5,
-        "att": 0,
-        "multi_heur": 0.25
-      }
-    },
-    "is_0.5__emb_0.25__bart_0.25__c_0.5__att_0.1__mh_0.25": {
-      "$gen": {
-        "iss": 0.5,
-        "emb": 0.25,
-        "bart": 0.25,
-        "complete": 0.5,
-        "att": 0.1,
-        "multi_heur": 0.25
-      }      
-    },
-    "is_0.5__emb_0.25__bart_0.25__c_0.5__att_0.1__mh_0.5": {
-      "$gen": {
-        "iss": 0.5,
-        "emb": 0.25,
-        "bart": 0.25,
-        "complete": 0.5,
-        "att": 0.1,
-        "multi_heur": 0.5
-      }      
     }
   }
 }
