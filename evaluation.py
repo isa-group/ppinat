@@ -106,6 +106,8 @@ else:
         if "$gen" in matching[key]:
             matching[key] = generate_weights(**matching[key]["$gen"])
 
+disable_heuristics = "disable_heuristics" in config and config["disable_heuristics"]
+
 for dataset in datasets:
     parsing_metrics_results = []
     parsing_tags_results = []
@@ -118,7 +120,7 @@ for dataset in datasets:
 
         try:
             test_execution = input_test.TestExecution(
-                args=args, dataset=dataset, parsing_model=parsing_model, matching_models = matching)
+                args=args, dataset=dataset, parsing_model=parsing_model, matching_models = matching, disable_heuristics=disable_heuristics)
 
                 
             for matching_model in test_execution.result:

@@ -294,8 +294,8 @@ class PPIBotCommand():
         else:
             self.values.update({param_name: value})
 
-    def save_partial(self, param_name, command_type, context, entities, similarity):
-        command = resolve_command(command_type, context, entities, similarity, expected=self.parameters[param_name].param_type)
+    def save_partial(self, param_name, command_type, context, entities, similarity, heuristics=True):
+        command = resolve_command(command_type, context, entities, similarity, expected=self.parameters[param_name].param_type, heuristics=heuristics)
         self.partials.update({param_name: (command, context)})
         return (command, context)
 
@@ -348,7 +348,7 @@ class PPIBotCommand():
 
         return matched
 
-    def match_entities(self, entities: RecognizedEntities, similarity: SimilarityComputer, context):
+    def match_entities(self, entities: RecognizedEntities, similarity: SimilarityComputer, context, *args):
         matched = True
 
         for param_name in self.parameters:
@@ -703,7 +703,8 @@ def resolve_command(
     entities: RecognizedEntities = None, 
     similarity: SimilarityComputer = None, 
     expected = None,
-    situation: list = None
+    situation: list = None,
+    heuristics = True
 ) -> PPIBotCommand:
     """
     Resolves the command that applies given an intent and a context.
@@ -759,7 +760,7 @@ def resolve_command(
 
     if command is not None:
         if entities is not None:
-            command.match_entities(entities, similarity, context)
+            command.match_entities(entities, similarity, context, heuristics)
         
         logger.debug(f"choosen {command.command_name} with {entities}")
     

@@ -383,7 +383,7 @@ class TimeMetricCommand(b.PPIBotCommand):
         )
     }
 
-    def match_entities(self, result, similarity, *args):
+    def match_entities(self, result, similarity, heuristics=True, *args):
         # We use the metric decoder instead of the entities provided by the recognizer
         if hasattr(result, "text"):
             annotation: PPIAnnotation = similarity.metric_decoder(result.text)
@@ -410,16 +410,21 @@ class TimeMetricCommand(b.PPIBotCommand):
             logger.info(f"TimeMetricCommand - Matching for [only:{only_text}]")
             self.only_text_time_metric = True
 
-            result = t.InstantCondition.match_special_pair(similarity, only_text, type=['negation', 'begin', 'end'])
-            (cond, cond_neg) = result[0]
-            (start, cond2_beg) = result[1]
-            (cond1_end, end) = result[2]
-        
-            cond1 = ([start] + cond[0], cond[1])
-            cond2 = (cond[0] + cond_neg[0] + [end], cond[1] + cond_neg[1])
+            if heuristics:
+                result = t.InstantCondition.match_special_pair(similarity, only_text, type=['negation', 'begin', 'end'])
+                (cond, cond_neg) = result[0]
+                (start, cond2_beg) = result[1]
+                (cond1_end, end) = result[2]
+            
+                cond1 = ([start] + cond[0], cond[1])
+                cond2 = (cond[0] + cond_neg[0] + [end], cond[1] + cond_neg[1])
 
-            self.save("from_cond", cond1, True)
-            self.save("to_cond", cond2, True)
+                self.save("from_cond", cond1, True)
+                self.save("to_cond", cond2, True)
+            else:
+                cond = t.InstantCondition.match(only_text, similarity)
+                self.save_or_unknown("to_cond", cond, only_text,
+                                    save_alternatives=True)
 
             return True
 
@@ -438,15 +443,23 @@ class TimeMetricCommand(b.PPIBotCommand):
 
         elif from_text is not None:
             logger.info(f"TimeMetricCommand - Matching for [from:{from_text}]")
-            (cond, end) = t.InstantCondition.match_special_pair(similarity, from_text, type=['end'])[0]
-            self.save_or_unknown("from_cond", cond, from_text, save_alternatives=True)
-            self.save("to_cond", ([end],[]), save_alternatives=True)
+            if heuristics:
+                (cond, end) = t.InstantCondition.match_special_pair(similarity, from_text, type=['end'])[0]
+                self.save_or_unknown("from_cond", cond, from_text, save_alternatives=True)
+                self.save("to_cond", ([end],[]), save_alternatives=True)
+            else:
+                cond = t.InstantCondition.match(from_text, similarity)
+                self.save_or_unknown("from_cond", cond, from_text, save_alternatives=True)
 
         elif to_text is not None:
             logger.info(f"TimeMetricCommand - Matching for [to:{to_text}]")
-            (start, cond) = t.InstantCondition.match_special_pair(similarity, to_text, type=['begin'])[0]
-            self.save("from_cond", ([start],[]), save_alternatives=True)
-            self.save_or_unknown("to_cond", cond, to_text, save_alternatives=True)
+            if heuristics:
+                (start, cond) = t.InstantCondition.match_special_pair(similarity, to_text, type=['begin'])[0]
+                self.save("from_cond", ([start],[]), save_alternatives=True)
+                self.save_or_unknown("to_cond", cond, to_text, save_alternatives=True)
+            else:
+                cond = t.InstantCondition.match(to_text, similarity)
+                self.save_or_unknown("to_cond", cond, to_text, save_alternatives=True)
 
         return False
 
@@ -532,7 +545,7 @@ class CountMetricCommand(b.PPIBotCommand):
         )
     }
 
-    def match_entities(self, result, similarity, *args):
+    def match_entities(self, result, similarity, heuristics=True, *args):
         # We use the metric decoder instead of the entities provided by the recognizer
         if hasattr(result, "text"):
             annotation: PPIAnnotation = similarity.metric_decoder(result.text)
@@ -557,16 +570,17 @@ class CountMetricCommand(b.PPIBotCommand):
                 entity, similarity)
             self.save("conditional_metric", matched_condition)
         else:
-            if aggregation is not None:
+            if heuristics and aggregation is not None:
                 agg_match = t.resolve_tuple_with_first(t.AggFunction.match(aggregation, similarity))
                 if agg_match.value == "%":
                     conditional_metric = t.LogicCondition(t.Literal(0, 'numeric'), op='gt')
                     self.save("conditional_metric", conditional_metric)
 
         if when_text is not None:
-            if t.InstantCondition.detect_negative(when_text, similarity):
-                matched_condition = t.LogicCondition(t.Literal(0, 'numeric'), op='equal')
-                self.save("conditional_metric", matched_condition)
+            if heuristics:
+                if t.InstantCondition.detect_negative(when_text, similarity):
+                    matched_condition = t.LogicCondition(t.Literal(0, 'numeric'), op='equal')
+                    self.save("conditional_metric", matched_condition)
 
             cond = t.InstantCondition.match_from_text(when_text, similarity)
             self.save_or_unknown("when", cond, when_text,
@@ -811,7 +825,8 @@ class ComputeMetricCommand(b.PPIBotCommand):
                     command_type=command_type,
                     context=None,
                     entities=result,
-                    similarity=similarity
+                    similarity=similarity,
+                    heuristics = infer_agg,
                 )
                 logger.info(f"ComputeMetricCommand - Base command found ({found_command})")
 

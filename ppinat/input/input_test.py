@@ -93,7 +93,7 @@ class Evaluation:
 
 
 class TestExecution:
-    def __init__(self, args, dataset, parsing_model, matching_models):
+    def __init__(self, args, dataset, parsing_model, matching_models, disable_heuristics=False):
         if not exists(dataset):
             raise RuntimeError(
                 f"File provided does not exist: {dataset}")
@@ -127,7 +127,7 @@ class TestExecution:
 
                 for model_name in matching_models:
                     SIMILARITY.weights = matching_models[model_name]
-                    self.result[model_name].evaluate(d_name, metrics, SIMILARITY)
+                    self.result[model_name].evaluate(d_name, metrics, SIMILARITY, disable_heuristics)
 
             for model_name in matching_models:
                 self.result[model_name].finish()
@@ -172,7 +172,7 @@ class InputTest:
         self.goldstandard_atts = {k: 0 for k in ATTRIBUTES}
         self.identified_atts = {k: 0 for k in ATTRIBUTES}
 
-    def evaluate(self, d_name, metrics, SIMILARITY):
+    def evaluate(self, d_name, metrics, SIMILARITY, disable_heuristics=False):
 
                 print(Fore.WHITE + "Analyzing metrics..." + Fore.RESET)
                 for m in filter(lambda x: (x["dataset"] == d_name or d_name in x["dataset"]) and ("goldstandard" in x and d_name in x["goldstandard"]), metrics):
@@ -182,7 +182,7 @@ class InputTest:
                     recognized_entity = r.RecognizedEntities(None, m["description"])
 
                     annotation = self.evaluate_parser(SIMILARITY, recognized_entity, m["slots"])
-                    result = self.evaluate_matcher(SIMILARITY, recognized_entity, annotation, m["goldstandard"][d_name], m["type"])
+                    result = self.evaluate_matcher(SIMILARITY, recognized_entity, annotation, m["goldstandard"][d_name], m["type"], disable_heuristics)
                     
                     # if args.verbosity and result is not None:
                     #     extract_summary(SIMILARITY, m, table_summary, result)
@@ -214,10 +214,10 @@ class InputTest:
                 print(f"-- Attribute {t}")
                 print_evaluation(self.matching_attribute[t])
 
-    def evaluate_matcher(self, similarity, recognized_entity, annotation, goldstandard, type):
+    def evaluate_matcher(self, similarity, recognized_entity, annotation, goldstandard, type, disable_heuristics=False):
         if type == annotation.get_measure_type():
         
-            agg_result, agg_command = self.aggregation_eval(recognized_entity, similarity, goldstandard)
+            agg_result, agg_command = self.aggregation_eval(recognized_entity, similarity, goldstandard, disable_heuristics)
 
             if 'base_measure' in agg_command.partials and agg_command.partials['base_measure'] is not None:
                 metric_result = self.analyse_metric(
@@ -267,13 +267,13 @@ class InputTest:
 
         return matcher_metric_result
 
-    def aggregation_eval(self, recognized_entity, similarity, goldstandard):
+    def aggregation_eval(self, recognized_entity, similarity, goldstandard, disable_heuristics=False):
         aggregation_result = None
         filter_result = None
 
         agg_command = commands.ComputeMetricCommand()
         try: 
-            agg_command.match_entities(recognized_entity, similarity, infer_agg=True)
+            agg_command.match_entities(recognized_entity, similarity, infer_agg=not disable_heuristics)
         except Exception as e:
             print(Fore.RED + "An error ocurred while matching entities" + Fore.RESET)
             logger.exception("Error while matching entities", exc_info=e, stack_info=True)
