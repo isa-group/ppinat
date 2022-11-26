@@ -15,7 +15,7 @@ class ViterbiDecoder:
 
     def predict_annotation(self, input_string, less_restricted=False) -> PPIAnnotation:
         words = input_string.split()
-        logger.info('Annotating:', words)
+        logger.info(f"Annotating: {words}")
         paths = self._compute_initial_paths(words[0])
 
         for word in words[1:]:
