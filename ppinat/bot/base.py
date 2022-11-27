@@ -348,7 +348,7 @@ class PPIBotCommand():
 
         return matched
 
-    def match_entities(self, entities: RecognizedEntities, similarity: SimilarityComputer, context, *args):
+    def match_entities(self, entities: RecognizedEntities, similarity: SimilarityComputer, context=None, **args):
         matched = True
 
         for param_name in self.parameters:
@@ -760,7 +760,7 @@ def resolve_command(
 
     if command is not None:
         if entities is not None:
-            command.match_entities(entities, similarity, context, heuristics)
+            command.match_entities(entities, similarity, context=context, heuristics=heuristics)
         
         logger.debug(f"choosen {command.command_name} with {entities}")
     

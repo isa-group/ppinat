@@ -107,6 +107,7 @@ else:
             matching[key] = generate_weights(**matching[key]["$gen"])
 
 disable_heuristics = "disable_heuristics" in config and config["disable_heuristics"]
+logger.info(f"Heuristics disabled: {disable_heuristics}")
 
 for dataset in datasets:
     parsing_metrics_results = []

@@ -273,7 +273,7 @@ class InputTest:
 
         agg_command = commands.ComputeMetricCommand()
         try: 
-            agg_command.match_entities(recognized_entity, similarity, infer_agg=not disable_heuristics)
+            agg_command.match_entities(recognized_entity, similarity, heuristics=not disable_heuristics)
         except Exception as e:
             print(Fore.RED + "An error ocurred while matching entities" + Fore.RESET)
             logger.exception("Error while matching entities", exc_info=e, stack_info=True)

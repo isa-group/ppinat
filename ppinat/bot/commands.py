@@ -271,7 +271,7 @@ class BaseInstantConditionCommand(b.PPIBotCommand):
         )
     }
 
-    def match_entities(self, entities: RecognizedEntities, similarity, *args):
+    def match_entities(self, entities: RecognizedEntities, similarity, **args):
         attribute = self.parameters["attribute"].extract_entity(entities)
         matched_attribute = self.match(
             "attribute", attribute, similarity) if attribute is not None else False
@@ -383,7 +383,7 @@ class TimeMetricCommand(b.PPIBotCommand):
         )
     }
 
-    def match_entities(self, result, similarity, heuristics=True, *args):
+    def match_entities(self, result, similarity, heuristics=True, **args):
         # We use the metric decoder instead of the entities provided by the recognizer
         if hasattr(result, "text"):
             annotation: PPIAnnotation = similarity.metric_decoder(result.text)
@@ -545,7 +545,7 @@ class CountMetricCommand(b.PPIBotCommand):
         )
     }
 
-    def match_entities(self, result, similarity, heuristics=True, *args):
+    def match_entities(self, result, similarity, heuristics=True, **args):
         # We use the metric decoder instead of the entities provided by the recognizer
         if hasattr(result, "text"):
             annotation: PPIAnnotation = similarity.metric_decoder(result.text)
@@ -650,7 +650,7 @@ class DataMetricCommand(b.PPIBotCommand):
         )
     }
 
-    def match_entities(self, result, similarity, *args):
+    def match_entities(self, result, similarity, **args):
         if hasattr(result, "text"):
             annotation: PPIAnnotation = similarity.metric_decoder(result.text)
         else:
@@ -798,7 +798,7 @@ class ComputeMetricCommand(b.PPIBotCommand):
             else:
                 return entities.extract_entity("AggFunction") is not None
 
-    def match_entities(self, result, similarity, infer_agg=False, **args):
+    def match_entities(self, result, similarity, heuristics=True, **args):
         if self.intent == self.command_name:
             return super().match_entities(result, similarity)
         else:
@@ -826,12 +826,12 @@ class ComputeMetricCommand(b.PPIBotCommand):
                     context=None,
                     entities=result,
                     similarity=similarity,
-                    heuristics = infer_agg,
+                    heuristics = heuristics,
                 )
                 logger.info(f"ComputeMetricCommand - Base command found ({found_command})")
 
             matched_agg = self.match("agg_function", annotation.get_aggregation_function(), similarity)
-            if not matched_agg and infer_agg:
+            if not matched_agg and heuristics:
                 self.save("agg_function", t.AggFunction.parse(default_agg))
 
 
@@ -1040,7 +1040,7 @@ class PeriodicityCommand(b.PPIBotCommand):
         )
     }
 
-    def match_entities(self, entities, similarity, *args):
+    def match_entities(self, entities, similarity, **args):
 
         time_unit = entities.extract_entity("Time unit", "Period")
         value = entities.extract_entity("Value", "Period")
@@ -1306,7 +1306,7 @@ class CompareMetrics(b.PPIBotCommand):
         )
     }
 
-    def match_entities(self, entities: RecognizedEntities, *args):
+    def match_entities(self, entities: RecognizedEntities, **args):
         variables = entities.extract_entity("VariableName", all_values=True)
         if variables is None:
             return False
