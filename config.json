@@ -9,8 +9,7 @@
     "./input/metrics_dataset.json"
   ],
   "parsing": [
-    "specific",
-    "perfect"
+    "specific"
   ],
   "parsingall": [
     "viterbi",
