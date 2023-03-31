@@ -16,7 +16,7 @@ from colorama import Fore
 from ppinat.helpers import load_log
 from ppinat.matcher.similarity import SimilarityComputer
 from ppinat.ppiparser.ppiannotation import PPIAnnotation, text_by_tag
-from ppinat.ppiparser.transformer import load_transformer, load_general_transformer, load_perfect_decoder
+from ppinat.ppiparser.transformer import load_transformer, load_general_transformer, load_perfect_decoder, load_transformer_es
 from ppinat.ppiparser.decoder import load_decoder
 from ppinot4py.model import AppliesTo, RuntimeState, TimeInstantCondition
 from ppinat.models.gcloud import update_models
@@ -459,9 +459,15 @@ def load_similarity(log, metrics, parsing_model, weights):
         COUNT_MODEL = './ppinat/models/CountModel'
         DATA_MODEL = './ppinat/models/DataModel'
         DECODER = load_transformer(TEXT_CLASSIFIER, TIME_MODEL, COUNT_MODEL, DATA_MODEL)
-
     elif parsing_model == "perfect":
         DECODER = load_perfect_decoder(metrics)
+    elif parsing_model == "specific_es":
+        update_models("specific_es")
+        TEXT_CLASSIFIER = './ppinat/models/TextClassification_es'
+        TIME_MODEL = './ppinat/models/TimeModel_es'
+        COUNT_MODEL = './ppinat/models/CountModel_es'
+        DATA_MODEL = './ppinat/models/DataModel_es'
+        DECODER = load_transformer_es(TEXT_CLASSIFIER, TIME_MODEL, COUNT_MODEL, DATA_MODEL)
 
     else:
         TRAINING_FILE = 'input/parser_training/parser_training_data.json'
