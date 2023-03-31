@@ -106,19 +106,19 @@ for dataset in datasets:
 
     dataset_name = re.findall("./input/(.*)", dataset)[0]
 
-    if not os.path.exists("results"):
-        os.mkdir("results")
+    if not os.path.exists("output"):
+        os.mkdir("output")
 
     timestr = time.strftime("%Y%m%d-%H%M%S")
 
     df = pd.DataFrame(parsing_tags_results)
-    df.to_csv(f"results/{timestr}-{dataset_name}-parsing-tags-results.csv")
+    df.to_csv(f"output/{timestr}-{dataset_name}-parsing-tags-results.csv")
     pm = pd.DataFrame(parsing_metrics_results)
-    pm.to_csv(f"results/{timestr}-{dataset_name}-parsing-metrics-results.csv")
+    pm.to_csv(f"output/{timestr}-{dataset_name}-parsing-metrics-results.csv")
     mm = pd.DataFrame(matching_metrics_results)
-    mm.to_csv(f"results/{timestr}-{dataset_name}-matching-metrics-results.csv")
+    mm.to_csv(f"output/{timestr}-{dataset_name}-matching-metrics-results.csv")
     df = pd.DataFrame(matching_attrib_results)
-    df.to_csv(f"results/{timestr}-{dataset_name}-matching-attrib-results.csv")
+    df.to_csv(f"output/{timestr}-{dataset_name}-matching-attrib-results.csv")
 
     with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
         print("OVERALL PARSING RESULTS:")
