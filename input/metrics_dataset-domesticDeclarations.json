@@ -226,7 +226,7 @@
       "type": "count",
       "dataset": "domesticDeclarations",
       "slots": {
-        "CE": "the requests the director approves",
+        "CE": "requests the director approves",
         "AGR": "% of"
       },
       "goldstandard": {
