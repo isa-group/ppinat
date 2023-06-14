@@ -6,6 +6,7 @@ from os import remove
 from os.path import exists
 from enum import Enum
 import logging
+import time
 
 import pandas as pd
 import ppinat.bot.commands as commands
@@ -118,12 +119,20 @@ class TestExecution:
                 metrics = data["metrics"]
 
                 print(Fore.WHITE + "Loading dataset: " + d_name + Fore.RESET)
+                load_ds_start = time.time()
                 log_file = load_dataset(datasets[d_name])
+                load_ds_end = time.time()
+                load_ds = load_ds_end - load_ds_start
                 print(Fore.GREEN + "Loaded" + Fore.RESET)
+                print(f'Loding dataset took {load_ds} seconds')
 
                 print(Fore.WHITE + "Loading similarity computer: " + Fore.RESET)
+                load_sim_start = time.time()
                 SIMILARITY = load_similarity(log_file, metrics, self.seleted_model, None)
+                load_sim_end = time.time()
+                load_sim = load_sim_end - load_sim_start
                 print(Fore.GREEN + "Loaded" + Fore.RESET)
+                print(f'Loding similarity computer took {load_sim} seconds')
 
                 for model_name in matching_models:
                     SIMILARITY.weights = matching_models[model_name]
@@ -172,6 +181,11 @@ class InputTest:
         self.goldstandard_atts = {k: 0 for k in ATTRIBUTES}
         self.identified_atts = {k: 0 for k in ATTRIBUTES}
 
+        self.execution_times = {
+            "parsing": [],
+            "matching": []
+        }
+
     def evaluate(self, d_name, metrics, SIMILARITY, disable_heuristics=False):
 
                 print(Fore.WHITE + "Analyzing metrics..." + Fore.RESET)
@@ -181,9 +195,18 @@ class InputTest:
                     print(f"{Fore.BLUE}Metric -----> {m['description']}{Fore.RESET}")
                     recognized_entity = r.RecognizedEntities(None, m["description"])
 
+                    parsing_start = time.time()
                     annotation = self.evaluate_parser(SIMILARITY, recognized_entity, m["slots"])
-                    result = self.evaluate_matcher(SIMILARITY, recognized_entity, annotation, m["goldstandard"][d_name], m["type"], disable_heuristics)
+                    parsing_end = time.time()
+                    parsing_time = parsing_end - parsing_start
+                    self.execution_times["parsing"].append(parsing_time)
                     
+                    matching_start = time.time()
+                    result = self.evaluate_matcher(SIMILARITY, recognized_entity, annotation, m["goldstandard"][d_name], m["type"], disable_heuristics)
+                    matching_end = time.time()
+                    matching_time = matching_end - matching_start
+                    self.execution_times["matching"].append(matching_time)
+
                     # if args.verbosity and result is not None:
                     #     extract_summary(SIMILARITY, m, table_summary, result)
 
@@ -207,12 +230,16 @@ class InputTest:
                 print(f"-- Tag {t}")
                 print_evaluation(self.tagging_tag[t])
 
+            print(f"Parsing execution time: {sum(self.execution_times['parsing'])} seconds")
+
             print_results_summary("Matching results summary", self.matching_overall)
             matching_aggregation = aggregate_eval_results(self.matching_attribute)
             print_evaluation(matching_aggregation)
             for t in self.matching_attribute:
                 print(f"-- Attribute {t}")
                 print_evaluation(self.matching_attribute[t])
+
+            print(f"Matching execution time: {sum(self.execution_times['matching'])} seconds")
 
     def evaluate_matcher(self, similarity, recognized_entity, annotation, goldstandard, type, disable_heuristics=False):
         if type == annotation.get_measure_type():

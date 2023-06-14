@@ -9,13 +9,14 @@
     "./input/metrics_dataset.json"
   ],
   "parsing": [
-    "specific_es"
+    "specific"
   ],
   "parsingall": [
     "viterbi",
     "specific",
     "general",
-    "perfect"
+    "perfect",
+    "specific_es"
   ],
   "matching": {
     "is_0.25__emb_0.5__bart_0.25__c_0.5__att_0.2__mh_0.25": {
