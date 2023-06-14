@@ -1,7 +1,7 @@
 {
   "datasets": {
     "domesticDeclarations": {
-      "url": "https://data.4tu.nl/ndownloader/files/24031811",
+      "url": "https://data.4tu.nl/file/6a0a26d2-82d0-4018-b1cd-89afb0e8627f/6eeb0328-f991-48c7-95f2-35033504036e",
       "file": "input/event_logs/DomesticDeclarations.xes"
     }
   },
@@ -11,7 +11,7 @@
       "type": "time",
       "dataset": "domesticDeclarations",
       "slots": {
-        "AGR": "average total",
+        "AGR": "average",
         "TSE": "request submission",
         "TEE": "payment"
       },
@@ -38,7 +38,7 @@
       "dataset": "domesticDeclarations",
       "slots": {
         "AGR": "average total",
-        "TBE": "for reimbursement of travel costs"
+        "TBE": "reimbursement of travel costs"
       },
       "goldstandard": {
         "domesticDeclarations": {
@@ -86,7 +86,7 @@
       "dataset": "domesticDeclarations",
       "slots": {
         "AGR": "Average",
-        "AttributeValue": "declared costs",
+        "AttributeName": "declared costs",
         "GBC": "trip"
       },
       "goldstandard": {
@@ -94,7 +94,7 @@
           "type": "data",
           "aggregation": "AVG",
           "data_condition": {
-            "attribute": "Amount"
+            "attribute": "case:Amount"
           }
         }
       }
@@ -433,7 +433,6 @@
       "type": "count",
       "dataset": "domesticDeclarations",
       "slots": {
-        "AGR": "Number of times",
         "CE": "the director's approval is needed"
       },
       "goldstandard": {
@@ -504,7 +503,7 @@
       "type": "time",
       "dataset": "domesticDeclarations",
       "slots": {
-        "TBE": "process"
+        "TBE": "the process"
       },
       "goldstandard": {
         "domesticDeclarations": {
@@ -666,7 +665,7 @@
       "dataset": "domesticDeclarations",
       "slots": {
         "TSE": "submitting the declaration",
-        "TEE": "approval"
+        "TEE": "the approval"
       },
       "goldstandard": {
         "domesticDeclarations": {

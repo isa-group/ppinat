@@ -1,7 +1,7 @@
 {
   "datasets": {
     "traffic": {
-      "url": "https://data.4tu.nl/ndownloader/files/24018146",
+      "url": "https://data.4tu.nl/file/806acd1a-2bf2-4e39-be21-69b8cad10909/b234b06c-4d4f-4055-9f14-6218e3906d82",
       "file": "input/event_logs/Road_Traffic_Fine_Management_Process.xes"
     },
     "bpi2013": {

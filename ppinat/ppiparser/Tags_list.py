@@ -5,5 +5,6 @@ TAGS_LIST = {
     "general": ['O', 'B-AggFunction', 'I-AggFunction', 'B-TMI', 'I-TMI', 'B-TSE', 'I-TSE', 'B-TEE', 'I-TEE', 'B-CMI', 'I-CMI', 'B-CE', 'I-CE', 'B-GBI', 'I-GBI', 'B-GBC', 'I-GBC', 'B-CCI', 'I-CCI', 'B-AttributeValue', 'B-AttributeName', 'B-TBE', 'I-TBE', 'B-FDI', 'I-FDI', 'B-FDE', 'I-FDE', 'I-AttributeValue'],
     "time_es": ['B-TBE', 'B-TSE', 'B-TEE', 'B-AttributeValue', 'B-AGR', 'I-TBE', 'I-TSE', 'O', 'I-AttributeValue', 'B-CCI', 'B-GBC', 'I-AGR', 'I-TEE', 'I-GBC', 'I-CCI'],
     "count_es": ['B-AGR', 'B-AttributeValue', 'B-CE', 'O', 'B-FDE', 'I-AttributeValue', 'B-CCI', 'B-GBC', 'I-AGR', 'I-CE', 'I-FDE', 'I-GBC', 'I-CCI'],
-    "data_es": ['B-CCI', 'I-AGR', 'B-AttributeValue', 'I-CCI', 'B-AttributeName', 'B-GBC', 'I-GBC', 'B-AGR', 'O']
+    "data_es": ['B-CCI', 'I-AGR', 'B-AttributeValue', 'I-CCI', 'B-AttributeName', 'B-GBC', 'I-GBC', 'B-AGR', 'O'],
+    "flant5": ['TSE', 'TEE', 'TBE', 'CE','AttributeName', 'AttributeValue', 'AGR', 'GBC', 'FDE']
 }

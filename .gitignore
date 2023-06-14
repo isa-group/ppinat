@@ -136,3 +136,4 @@ ppinat/models/CountModel
 ppinat/models/TimeModel
 ppinat/models/DataModel
 ppinat/models/TextClassification
+ppinat/models/GeneralParser_flant5
