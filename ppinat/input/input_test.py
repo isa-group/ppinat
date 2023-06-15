@@ -122,17 +122,15 @@ class TestExecution:
                 load_ds_start = time.time()
                 log_file = load_dataset(datasets[d_name])
                 load_ds_end = time.time()
-                load_ds = load_ds_end - load_ds_start
+                self.load_ds = load_ds_end - load_ds_start
                 print(Fore.GREEN + "Loaded" + Fore.RESET)
-                print(f'Loding dataset took {load_ds} seconds')
 
                 print(Fore.WHITE + "Loading similarity computer: " + Fore.RESET)
                 load_sim_start = time.time()
                 SIMILARITY = load_similarity(log_file, metrics, self.seleted_model, None)
                 load_sim_end = time.time()
-                load_sim = load_sim_end - load_sim_start
+                self.load_sim = load_sim_end - load_sim_start
                 print(Fore.GREEN + "Loaded" + Fore.RESET)
-                print(f'Loding similarity computer took {load_sim} seconds')
 
                 for model_name in matching_models:
                     SIMILARITY.weights = matching_models[model_name]

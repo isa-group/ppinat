@@ -7,6 +7,7 @@ import pandas as pd
 import re
 import logging
 import utils
+import numpy as np
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(module)s:%(funcName)s:%(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -83,14 +84,17 @@ for dataset in datasets:
         try:
             test_execution = input_test.TestExecution(
                 args=args, dataset=dataset, parsing_model=parsing_model, matching_models = matching, disable_heuristics=disable_heuristics)
-
                 
             for matching_model in test_execution.result:
                 test = test_execution.result[matching_model]
-
+                
                 parsing_metrics_results.append({
                     "parsing_type": parsing_model,
                     "matching_type": matching_model,
+                    "load_dataset_time(s)": test_execution.load_ds,
+                    "load_similarity_time(s)": test_execution.load_sim,
+                    "avg_parsing_time(s)": np.mean(test.execution_times["parsing"]),
+                    "std_parsing_time(s)": np.std(test.execution_times["parsing"]),
                     **test.tagging_overall
                 })
                 update_results(parsing_tags_results, test.tagging_tag, parsing_type=parsing_model, matching_type=matching_model)
@@ -98,6 +102,10 @@ for dataset in datasets:
                 matching_metrics_results.append({
                     "parsing_type": parsing_model,
                     "matching_type": matching_model,
+                    "load_dataset_time(s)": test_execution.load_ds,
+                    "load_similarity_time(s)": test_execution.load_sim,
+                    "avg_matching_time(s)": np.mean(test.execution_times["matching"]),
+                    "std_matching_time(s)": np.std(test.execution_times["matching"]),
                     **test.matching_overall
                 })
                 update_results(matching_attrib_results, test.matching_attribute, parsing_type=parsing_model, matching_type=matching_model)
