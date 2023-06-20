@@ -1,0 +1,50 @@
+{
+  "datasets": [
+    "./input/metrics_dataset-traffic-test.json",
+    "./input/metrics_dataset-domesticDeclarations.json"
+  ],
+  
+    "datasetas": [
+      "./input/metrics_dataset-domesticDeclarations.json",
+      "./input/metrics_dataset-traffic-test.json",
+      "./input/metrics_dataset.json"
+    ],
+    "parsing": [
+      "specific"
+    ],
+      "parsinga": [
+    "crowd_specific",
+    "viterbi",
+    "specific",
+    "general",
+    "perfect"
+  ],
+  "matching": {
+    "emb_is": {
+      "one_slot": {
+        "slot_is_sim": 0.25,
+        "slot_complete_is_sim": 0.2,
+        "slot_emb": 0.25,
+        "slot_complete_emb": 0.2,
+        "att_is_sim": 0.05,
+        "att_complete_is_sim": 0.05
+      },
+      "multi_slot": {
+        "ev1_$slot_is_sim": 0.05,
+        "ev1_$slot_complete_is_sim": 0.05,
+        "ev1_$slot_emb": 0.07,
+        "ev1_$slot_complete_emb": 0.06,
+        "ev2_$slot_is_sim": 0.05,
+        "ev2_$slot_complete_is_sim": 0.05,
+        "ev2_$slot_emb": 0.07,
+        "ev2_$slot_complete_emb": 0.06,
+        "ev1_$att_is_sim": 0.01,
+        "ev1_$att_complete_is_sim": 0.01,
+        "ev2_$att_is_sim": 0.01,
+        "ev2_$att_complete_is_sim": 0.01,
+        "same_type": 0.25,
+        "condition_ratio": 0.25
+      }
+    }
+  }
+}

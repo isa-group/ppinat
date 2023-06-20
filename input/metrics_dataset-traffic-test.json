@@ -45,7 +45,7 @@
           "to_condition": {
             "attribute": "ACTIVITY",
             "operator": "==",
-            "value": "Send For Credit Collection"
+            "value": "Send for Credit Collection"
           }
         }
       }
@@ -137,7 +137,7 @@
           "count_condition": {
             "attribute": "ACTIVITY",
             "operator": "==",
-            "value": "Add Penalty"
+            "value": "Add penalty"
           }, 
           "condition": {
             "operator": "gt",
@@ -161,7 +161,7 @@
           "count_condition": {
             "attribute": "ACTIVITY",
             "operator": "==",
-            "value": "Send For Credit Collection"
+            "value": "Send for Credit Collection"
           },
           "condition": {
             "operator": "gt",
@@ -208,7 +208,7 @@
           "count_condition": {
             "attribute": "ACTIVITY",
             "operator": "==",
-            "value": "Send For Credit Collection"
+            "value": "Send for Credit Collection"
           },
           "condition": {
             "operator": "gt",
@@ -345,7 +345,7 @@
           "count_condition": {
             "attribute": "ACTIVITY",
             "operator": "==",
-            "value": "Add Penalty"
+            "value": "Add penalty"
           }, 
           "condition": {
             "operator": "gt",
@@ -453,7 +453,7 @@
           "count_condition": {
             "attribute": "ACTIVITY",
             "operator": "==",
-            "value": "Send For Credit Collection"
+            "value": "Send for Credit Collection"
           }
         }
       }
@@ -473,12 +473,12 @@
           "from_condition": {
             "attribute": "ACTIVITY",
             "operator": "==",
-            "value": "Add Penalty"
+            "value": "Add penalty"
           },
           "to_condition": {
             "attribute": "ACTIVITY",
             "operator": "==",
-            "value": "Send For Credit Collection"
+            "value": "Send for Credit Collection"
           }
         }
       }

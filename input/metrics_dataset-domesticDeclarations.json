@@ -86,7 +86,7 @@
       "dataset": "domesticDeclarations",
       "slots": {
         "AGR": "Average",
-        "AttributeValue": "declared costs",
+        "AttributeName": "declared costs",
         "GBC": "trip"
       },
       "goldstandard": {
@@ -94,7 +94,7 @@
           "type": "data",
           "aggregation": "AVG",
           "data_condition": {
-            "attribute": "Amount"
+            "attribute": "case:Amount"
           }
         }
       }

@@ -1,0 +1,787 @@
+{
+    "metrics": [
+        {
+            "description": "The average time from the opening to the resolution of the incident",
+            "type": "time",
+            "slots": {
+                "AGR": "average",
+                "TSE": "the opening",
+                "TEE": "the resolution of the incident"
+            }
+        },
+        {
+            "description": "The mean duration from the commencement to the conclusion of the event",
+            "type": "time",
+            "slots": {
+            "AGR": "mean",
+            "TSE": "the commencement",
+            "TEE": "the conclusion of the event"
+            }
+        },
+        {
+            "description": "The average time from customer inquiry to response",
+            "type": "time",
+            "slots": {
+            "AGR": "average",
+            "TSE": "customer inquiry",
+            "TEE": "response"
+            }
+        },
+        {
+            "description": "The average time from purchase confirmation to delivery",
+            "type": "time",
+            "slots": {
+            "AGR": "average",
+            "TSE": "purchase confirmation",
+            "TEE": "delivery"
+            }
+        },
+        {
+            "description": "The average time from task assignment to completion",
+            "type": "time",
+            "slots": {
+            "AGR": "average",
+            "TSE": "task assignment",
+            "TEE": "completion"
+            }
+        },
+        {
+            "description": "The average time from request submission to approval",
+            "type": "time",
+            "slots": {
+            "AGR": "average",
+            "TSE": "request submission",
+            "TEE": "approval"
+            }
+        },
+        {
+            "description": "The average time from order placement to delivery",
+            "type": "time",
+            "slots": {
+            "AGR": "average",
+            "TSE": "order placement",
+            "TEE": "delivery"
+            }
+        },
+        {
+            "description": "The average time it takes to resolve the incident from the moment it is initiated",
+            "type": "time",
+            "slots": {
+            "AGR": "average",
+            "TSE": "the moment it is initiated",
+            "TEE": "to resolve the incident"
+            }
+        },
+        {
+            "description": "The maximum timeframe between the opening and the finalization of the issue",
+            "type": "time",
+            "slots": {
+            "AGR": "maximum",
+            "TSE": "the opening",
+            "TEE": "the finalization of the issue"
+            }
+        },
+        {
+            "description": "The median period from start to completion of the occurrence",
+            "type": "time",
+            "slots": {
+            "AGR": "median",
+            "TSE": "start",
+            "TEE": "completion of the occurrence"
+            }
+        },
+        {
+            "description": "The average time it takes for the incident to be resolved from its initiation",
+            "type": "time",
+            "slots": {
+            "AGR": "average",
+            "TSE": "its initiation",
+            "TEE": "the incident to be resolved"
+            }
+        },
+        {
+            "description": "The mean duration between the opening and the resolution of the incident",
+            "type": "time",
+            "slots": {
+            "AGR": "mean",
+            "TSE": "the opening",
+            "TEE": "the resolution of the incident"
+            }
+        },
+        {
+            "description": "The minimum time from commencement to finalization of the event",
+            "type": "time",
+            "slots": {
+            "AGR": "minimum",
+            "TSE": "commencement",
+            "TEE": "finalization of the event"
+            }
+        },
+        {
+            "description": "The median time between opening and completion of the issue",
+            "type": "time",
+            "slots": {
+            "AGR": "median",
+            "TSE": "opening",
+            "TEE": "completion of the issue"
+            }
+        },
+        {
+            "description": "The mean period from the initiation to the finalization of the occurrence",
+            "type": "time",
+            "slots": {
+            "AGR": "mean",
+            "TSE": "the initiation",
+            "TEE": "the finalization of the occurrence"
+            }
+        },
+        {
+            "description": "The average waiting time it takes to complete the manufacturing process",
+            "type": "time",
+            "slots": {
+            "AGR": "average",
+            "TBE": "complete the manufacturing process"
+            }
+        },
+        {
+            "description": "The maximum duration of a workout session",
+            "type": "time",
+            "slots": {
+            "AGR": "maximum",
+            "TBE": "a workout session"
+            }
+        },
+        {
+            "description": "The mean time required to assemble the furniture",
+            "type": "time",
+            "slots": {
+            "AGR": "mean",
+            "TBE": "assemble the furniture"
+            }
+        },
+        {
+            "description": "The average waiting time of a cooking class",
+            "type": "time",
+            "slots": {
+            "AGR": "average",
+            "TBE": "a cooking class"
+            }
+        },
+        {
+            "description": "Average waiting time for customer support calls",
+            "type": "time",
+            "slots": {
+            "AGR": "average",
+            "TBE": "customer support calls"
+            }
+        },
+        {
+            "description": "Average waiting time for public transportation",
+            "type": "time",
+            "slots": {
+            "AGR": "average",
+            "TBE": "public transportation"
+            }
+        },
+        {
+            "description": "The minimum duration of a basketball game",
+            "type": "time",
+            "slots": {
+            "AGR": "minimum",
+            "TBE": "a basketball game"
+            }
+        },
+        {
+            "description": "The mean time it takes to complete a software installation",
+            "type": "time",
+            "slots": {
+            "AGR": "mean",
+            "TBE": "complete a software installation"
+            }
+        },
+        {
+            "description": "The average duration of a yoga session",
+            "type": "time",
+            "slots": {
+            "AGR": "average",
+            "TBE": "a yoga session"
+            }
+        },
+        {
+            "description": "The average waiting time until complete a task grouped by department",
+            "type": "time",
+            "slots": {
+            "AGR": "average",
+            "TBE": "complete a task",
+            "GBC": "department"
+            }
+        },
+        {
+            "description": "The maximum duration of customer support tickets grouped by priority",
+            "type": "time",
+            "slots": {
+            "AGR": "maximum",
+            "TBE": "customer support tickets",
+            "GBC": "priority"
+            }
+        },
+        {
+            "description": "The mean time to process invoices grouped by vendor",
+            "type": "time",
+            "slots": {
+            "AGR": "mean",
+            "TBE": "process invoices",
+            "GBC": "vendor"
+            }
+        },
+        {
+            "description": "The average duration of software development sprints grouped by team",
+            "type": "time",
+            "slots": {
+            "AGR": "average",
+            "TBE": "software development sprints",
+            "GBC": "team"
+            }
+        },
+        {
+            "description": "The average time until resolve customer complaints grouped by product category",
+            "type": "time",
+            "slots": {
+            "AGR": "average",
+            "TBE": "resolve customer complaints",
+            "GBC": "product category"
+            }
+        },
+        {
+            "description": "The mean duration of meetings grouped by meeting type",
+            "type": "time",
+            "slots": {
+            "AGR": "mean",
+            "TBE": "meetings",
+            "GBC": "meeting type"
+            }
+        },
+        {
+            "description": "The average time until complete training sessions grouped by employee level",
+            "type": "time",
+            "slots": {
+            "AGR": "average",
+            "TBE": "complete training sessions",
+            "GBC": "employee level"
+            }
+        },
+        {
+            "description": "The minimum duration of software testing cycles grouped by application",
+            "type": "time",
+            "slots": {
+            "AGR": "minimum",
+            "TBE": "software testing cycles",
+            "GBC": "application"
+            }
+        },
+        {
+            "description": "The average time from project initiation to project completion grouped by department",
+            "type": "time",
+            "slots": {
+            "AGR": "average",
+            "TSE": "project initiation",
+            "TEE": "project completion",
+            "GBC": "department"
+            }
+        },
+        {
+            "description": "The mean time from order placement to order delivery, grouped by shipping method.",
+            "type": "time",
+            "slots": {
+            "AGR": "mean",
+            "TSE": "order placement",
+            "TEE": "order delivery",
+            "GBC": "shipping method"
+            }
+        },
+        {
+            "description": "The maximum time from product ideation to product launch, grouped by product category.",
+            "type": "time",
+            "slots": {
+            "AGR": "maximum",
+            "TSE": "product ideation",
+            "TEE": "product launch",
+            "GBC": "product category"
+            }
+        },
+        {
+            "description": "The average time it takes for a customer to receive a response to their inquiry, grouped by support channel.",
+            "type": "time",
+            "slots": {
+            "AGR": "average",
+            "TSE": "inquiry",
+            "TEE": "receive a response",
+            "GBC": "support channel"
+            }
+        },
+        {
+            "description": "The mean time from the start of a project to the end of a project, grouped by project type.",
+            "type": "time",
+            "slots": {
+            "AGR": "mean",  
+            "TSE": "start of a project",
+            "TEE": "end of a project",
+            "GBC": "project type"
+            }
+        },
+        {
+            "description": "The average number of website visits, grouped by traffic source",
+            "type": "count",
+            "slots": {
+            "AGR": "average",
+            "CE": "website visits",
+            "GBC": "traffic source"
+            }
+        },
+        {
+            "description": "The mean number of customer orders placed per week",
+            "type": "count",
+            "slots": {
+            "AGR": "mean",
+            "CE": "customer orders placed",
+            "GBC": "week"
+            }
+        },
+        {
+            "description": "The average number of emails received per month",
+            "type": "count",
+            "slots": {
+            "AGR": "average",
+            "CE": "emails received",
+            "GBC": "month"
+            }
+        },
+        {
+            "description": "The maximum number of customer complaints received per week",
+            "type": "count",
+            "slots": {
+            "AGR": "maximum",
+            "CE": "customer complaints received",
+            "GBC": "week"
+            }
+        },
+        {
+            "description": "The mean number of software bugs reported per sprint",
+            "type": "count",
+            "slots": {
+            "AGR": "mean",
+            "CE": "software bugs reported",
+            "GBC": "sprint"
+            }
+        },
+        {
+            "description": "The % of customers who renew their subscription, out of subscribers",
+            "type": "count",
+            "slots": {
+            "AGR": "% of",
+            "CE": "customers who renew their subscription",
+            "FDE": "subscribers"
+            }
+        },
+        {
+            "description": "The fraction of defective products identified during quality control inspections",
+            "type": "count",
+            "slots": {
+            "AGR": "fraction of",
+            "CE": "defective products identified",
+            "FDE": "quality control inspections"
+            }
+        },
+        {
+            "description": "The proportion of successful deliveries, out of delivery attempts",
+            "type": "count",
+            "slots": {
+            "AGR": "proportion of",
+            "CE": "successful deliveries",
+            "FDE": "delivery attempts"
+            }
+        },
+        {
+            "description": "The % of resolved customer complaints, out of complaints received",
+            "type": "count",
+            "slots": {
+            "AGR": "% of",
+            "CE": "resolved customer complaints",
+            "FDE": "complaints received"
+            }
+        },
+        {
+            "description": "The % of completed tasks, out of assigned tasks",
+            "type": "count",
+            "slots": {
+            "AGR": "% of",
+            "CE": "completed tasks",
+            "FDE": "assigned tasks"
+            }
+        },
+        {
+            "description": "The proportion of successful job placements, out of job applicants",
+            "type": "count",
+            "slots": {
+            "AGR": "proportion of",
+            "CE": "successful job placements",
+            "FDE": "job applicants"
+            }
+        },
+        {
+            "description": "The fraction of completed surveys from distributed surveys",
+            "type": "count",
+            "slots": {
+            "AGR": "fraction of",
+            "CE": "completed surveys",
+            "FDE": "distributed surveys"
+            }
+        },
+        {
+            "description": "The percentage of successful sales conversions in relation to leads generated",
+            "type": "count",
+            "slots": {
+            "AGR": "percentage of",
+            "CE": "successful sales conversions",
+            "FDE": "leads generated"
+            }
+        },
+        {
+            "description": "The ratio of resolved support tickets in relation to support tickets submitted",
+            "type": "count",
+            "slots": {
+            "AGR": "ratio of",
+            "CE": "resolved support tickets",
+            "FDE": "support tickets submitted"
+            }
+        },
+        {
+            "description": "The proportion of on-time project deliveries from projects completed",
+            "type": "count",
+            "slots": {
+            "AGR": "proportion of",
+            "CE": "on-time project deliveries",
+            "FDE": "projects completed"
+            }
+        },
+        {
+            "description": "The % of approved loan applications from loan applications received",
+            "type": "count",
+            "slots": {
+            "AGR": "% of",
+            "CE": "approved loan applications",
+            "FDE": "loan applications received"
+            }
+        },
+        {
+            "description": "The ratio of completed tasks in relation to assigned tasks",
+            "type": "count",
+            "slots": {
+            "AGR": "ratio of",
+            "CE": "completed tasks",
+            "FDE": "assigned tasks"
+            }
+        },
+        {
+            "description": "The proportion of satisfied customers in relation to customers surveyed",
+            "type": "count",
+            "slots": {
+            "AGR": "proportion of",
+            "CE": "satisfied customers",
+            "FDE": "customers surveyed"
+            }
+        },
+        {
+            "description": "The percentage of successful job interviews in relation to job applicants",
+            "type": "count",
+            "slots": {
+            "AGR": "percentage of",
+            "CE": "successful job interviews",
+            "FDE": "job applicants"
+            }
+        },
+        {
+            "description": "The fraction of resolved customer complaints in relation to complaints received",
+            "type": "count",
+            "slots": {
+            "AGR": "fraction of",
+            "CE": "resolved customer complaints",
+            "FDE": "complaints received"
+            }
+        },
+        {
+            "description": "The ratio of correct answers to questions in the exam",
+            "type": "count",
+            "slots": {
+            "AGR": "ratio of",
+            "CE": "correct answers",
+            "FDE": "questions in the exam"
+            }
+        },
+        
+        {
+            "description": "Average sales per month",
+            "type": "data",
+            "slots": {
+            "AGR": "Average",
+            "AttributeName": "sales",
+            "GBC": "month"
+            }
+        },
+        {
+            "description": "Average customer satisfaction score per month",
+            "type": "data",
+            "slots": {
+            "AGR": "Average",
+            "AttributeName": "customer satisfaction score",
+            "GBC": "month"
+            }
+        },
+        {
+            "description": "Minimum production cost",
+            "type": "data",
+            "slots": {
+            "AGR": "Minimum",
+            "AttributeName": "production cost"
+            }
+        },
+        {
+            "description": "Minimum stock level reached",
+            "type": "data",
+            "slots": {
+            "AGR": "Minimum",
+            "AttributeName": "stock level"
+            }
+        },
+        {
+            "description": "Maximum temperature recorded",
+            "type": "data",
+            "slots": {
+            "AGR": "Maximum",
+            "AttributeName": "temperature"
+            }
+        },
+        {
+            "description": "Maximum profit margin per product category",
+            "type": "data",
+            "slots": {
+            "AGR": "Maximum",
+            "AttributeName": "profit margin",
+            "GBC": "product category"
+            }
+            },
+        {
+            "description": "Time to resolution after the customer complaint date",
+            "type": "time",
+            "slots": {
+            "TSE": "the customer complaint date",
+            "TEE": "resolution"
+            }
+        },
+        {
+            "description": "Time to delivery since the order placement date",
+            "type": "time",
+            "slots": {
+            "TSE": "the order placement date",
+            "TEE": "delivery"
+            }
+        },
+        {
+            "description": "Time to response after the support ticket submission date",
+            "type": "time",
+            "slots": {
+            "TSE": "the support ticket submission date",
+            "TEE": "response"
+            }
+        },
+        {
+            "description": "Time to completion after the project kickoff",
+            "type": "time",
+            "slots": {
+            "TSE": "the project kickoff",
+            "TEE": "completion"
+            }
+        },
+        {
+            "description": "Time to resolution since the support ticket submission",
+            "type": "time",
+            "slots": {
+            "TSE": "the support ticket submission",
+            "TEE": "resolution"
+            }
+        },
+        {
+            "description": "Time to delivery after the order placement",
+            "type": "time",
+            "slots": {
+            "TSE": "the order placement",
+            "TEE": "delivery"
+            }
+        },
+        {
+            "description": "Time to response since the customer inquiry",
+            "type": "time",
+            "slots": {
+            "TSE": "the customer inquiry",
+            "TEE": "response"
+            }
+        },
+        {
+            "description": "Time to resolution after the incident report",
+            "type": "time",
+            "slots": {
+            "TSE": "the incident report",
+            "TEE": "resolution"
+            }
+        },
+        {
+            "description": "Time to resolution since the incident report",
+            "type": "time",
+            "slots": {
+            "TSE": "the incident report",
+            "TEE": "resolution"
+            }
+        },
+        {
+            "description": "Time to completion since the task assignment",
+            "type": "time",
+            "slots": {
+            "TSE": "the task assignment",
+            "TEE": "completion"
+            }
+        },
+        {
+            "description": "Time to delivery after the order placement",
+            "type": "time",
+            "slots": {
+            "TSE": "the order placement",
+            "TEE": "delivery"
+            }
+        },
+        {
+            "description": "Time to completion since the project kickoff",
+            "type": "time",
+            "slots": {
+            "TSE": "the project kickoff",
+            "TEE": "completion"
+            }
+        },
+
+        {
+            "description": "Number of sales made in relation to the first customer visit",
+            "type": "count",
+            "slots": {
+            "CE": "sales made",
+            "FDE": "the first customer visit"
+            }
+        },
+        {
+            "description": "Number of defects found in relation to the initial product inspection",
+            "type": "count",
+            "slots": {
+            "CE": "defects found",
+            "FDE": "the initial product inspection"
+            }
+        },
+        {
+            "description": "Number of errors logged in relation to the first system startup",
+            "type": "count",
+            "slots": {
+            "CE": "errors logged",
+            "FDE": "the first system startup"
+            }
+        },
+        {
+            "description": "Number of accidents reported in relation to the first day of operation",
+            "type": "count",
+            "slots": {
+            "CE": "accidents reported",
+            "FDE": "the first day of operation"
+            }
+        },
+        {
+            "description": "Number of tasks completed in relation to the initial project kickoff",
+            "type": "count",
+            "slots": {
+            "CE": "tasks completed",
+            "FDE": "the initial project kickoff"
+            }
+        },
+        {
+            "description": "Number of times the system crashed in relation to the first system startup",
+            "type": "count",
+            "slots": {
+            "CE": "the system crashed",
+            "FDE": "the first system startup"
+            }
+        },
+        {
+            "description": "Number of times a customer canceled their subscription in relation to the first sign-up",
+            "type": "count",
+            "slots": {
+            "CE": "a customer canceled their subscription",
+            "FDE": "the first sign-up"
+            }
+        },
+        {
+            "description": "Number of times a task was completed in relation to the first task assignment",
+            "type": "count",
+            "slots": {
+            "CE": "a task was completed",
+            "FDE": "the first task assignment"
+            }
+        },
+        {
+            "description": "Number of times the system crashed",
+            "type": "count",
+            "slots": {
+            "CE": "the system crashed"
+            }
+        },
+        {
+            "description": "Number of times a customer placed an order",
+            "type": "count",
+            "slots": {
+            "CE": "a customer placed an order"
+            }
+        },
+        {
+            "description": "Number of times an error occurred",
+            "type": "count",
+            "slots": {
+            "CE": "an error occurred"
+            }
+        },
+        {
+            "description": "Total number of times a feature was used",
+            "type": "count",
+            "slots": {
+            "AGR":"Total",
+            "CE": "a feature was used"
+            }
+        },
+        {
+            "description": "Total number of times a payment was made",
+            "type": "count",
+            "slots": {
+            "AGR":"Total",
+            "CE": "a payment was made"
+            }
+        },
+        {
+            "description": "Number of times an item was sold",
+            "type": "count",
+            "slots": {
+            "CE": "an item was sold"
+            }
+        },
+        {
+            "description": "Total number of times a task was completed",
+            "type": "count",
+            "slots": {
+            "AGR":"Total",
+            "CE": "a task was completed"
+            }
+        }
+    ]
+}
