@@ -4,10 +4,11 @@ import ppinat.ppiparser.Tags_list as Tags_list
 from .ppiannotation import PPIAnnotation
 
 class PPIDecoder:
-    def __init__(self, model, tokenizer, text_model=None):
+    def __init__(self, model, tokenizer, text_model=None, lang="en"):
         self.model = model
         self.text_model = text_model
         self.tokenizer = tokenizer
+        self.lang = lang
 
     def predict_annotation(self, input_string) -> PPIAnnotation:
         
@@ -17,11 +18,11 @@ class PPIDecoder:
         if self.text_model is not None:
             metric_type = self.text_model(**tokens)["logits"].argmax(-1).tolist()[0]
             if metric_type == 0:
-                type = "time"
+                type = "time" if self.lang == "en" else "time_es"
             elif metric_type == 1:
-                type = "count"
+                type = "count" if self.lang == "en" else "count_es"
             else:
-                type = "data"
+                type = "data" if self.lang == "en" else "data_es"
         
             predictions = self.model[type](**tokens)["logits"].argmax(-1).tolist()[0][1:-1]
             predictions_decoded = [Tags_list.TAGS_LIST[type][i] for i in predictions]

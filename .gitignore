@@ -129,10 +129,11 @@ dmypy.json
 .pyre/
 
 input/event_logs
-results/
+output/
 
 #models
 ppinat/models/CountModel
 ppinat/models/TimeModel
 ppinat/models/DataModel
 ppinat/models/TextClassification
+ppinat/models/GeneralParser_flant5

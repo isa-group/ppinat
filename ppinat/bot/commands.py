@@ -806,14 +806,13 @@ class ComputeMetricCommand(b.PPIBotCommand):
             logger.info(f"ComputeMetricCommand - Matching entities for annotation: {annotation}")
 
             self.metric_type = annotation.get_measure_type()
-            
-            if self.metric_type == "count":
+            if self.metric_type == "count" or self.metric_type == "count_es":
                 command_type = CountMetricCommand
                 default_agg = 'SUM'
-            elif self.metric_type == "time":
+            elif self.metric_type == "time" or self.metric_type == "time_es":
                 command_type=TimeMetricCommand
                 default_agg = 'AVG'
-            elif self.metric_type == "data":
+            elif self.metric_type == "data" or self.metric_type == "data_es":
                 command_type=DataMetricCommand
                 default_agg = 'SUM'
             else:

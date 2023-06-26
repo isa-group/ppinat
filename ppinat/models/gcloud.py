@@ -4,11 +4,16 @@ import zipfile
 import os
 import json
 
-def update_models():
+def update_models(model="specific"):
     bucket_name = "ppibot-bucket"
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
-    models = ["TextClassification", "TimeModel", "CountModel", "DataModel"]
+    if model == "specific":
+        models = ["TextClassification", "TimeModel", "CountModel", "DataModel"]
+    elif model == "specific_es":
+        models = ["TextClassification_es", "TimeModel_es", "CountModel_es", "DataModel_es"]
+    elif model == "general_flant5":
+        models = ["GeneralParser_flant5"]
 
     for model in models:
         blob = bucket.get_blob(f"{model}.zip")

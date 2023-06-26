@@ -1,7 +1,7 @@
 {
   "datasets": {
     "traffic": {
-      "url": "https://data.4tu.nl/ndownloader/files/24018146",
+      "url": "https://data.4tu.nl/file/806acd1a-2bf2-4e39-be21-69b8cad10909/b234b06c-4d4f-4055-9f14-6218e3906d82",
       "file": "input/event_logs/Road_Traffic_Fine_Management_Process.xes"
     }
   },
@@ -80,7 +80,7 @@
       "type": "time",
       "dataset": "traffic",
       "slots": {
-        "TEE": "the final payment"
+        "TBE": "the final payment"
       },
       "goldstandard": {
         "traffic": {
@@ -222,7 +222,7 @@
       "type": "time",
       "dataset": "traffic",
       "slots": {
-        "TEE": "notify fine to offender"
+        "TBE": "notify fine to offender"
       },
       "goldstandard": {
         "traffic": {
@@ -289,7 +289,7 @@
       "dataset": "traffic",
       "slots": {
         "AGR": "Average",
-        "TEE": "the arrival of a notification"
+        "TBE": "the arrival of a notification"
       },
       "goldstandard": {
         "traffic": {
@@ -361,7 +361,7 @@
       "slots": {
         "AGR": "average",
         "TSE": "the arrival of the notification",
-        "TEE": "to pay a fine"
+        "TEE": "pay a fine"
       },
       "goldstandard": {
         "traffic": {
@@ -386,7 +386,7 @@
       "dataset": "traffic",
       "slots": {
         "AGR": "average",
-        "TBE": "the prefecture to solve an appeal"
+        "TBE": "solve an appeal"
       },
       "goldstandard": {
         "traffic": {
