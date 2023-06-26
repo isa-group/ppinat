@@ -471,6 +471,7 @@ def load_similarity(log, metrics, parsing_model, weights):
         DATA_MODEL = './ppinat/models/DataModel_es'
         DECODER = load_transformer_es(TEXT_CLASSIFIER, TIME_MODEL, COUNT_MODEL, DATA_MODEL)
     elif parsing_model == "general_flant5":
+        update_models("general_flant5")
         PARSER_MODEL = './ppinat/models/GeneralParser_flant5'
         DECODER = load_general_transformer_flant5(PARSER_MODEL)
 

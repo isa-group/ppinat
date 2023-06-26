@@ -12,6 +12,8 @@ def update_models(model="specific"):
         models = ["TextClassification", "TimeModel", "CountModel", "DataModel"]
     elif model == "specific_es":
         models = ["TextClassification_es", "TimeModel_es", "CountModel_es", "DataModel_es"]
+    elif model == "general_flant5":
+        models = ["GeneralParser_flant5"]
 
     for model in models:
         blob = bucket.get_blob(f"{model}.zip")
