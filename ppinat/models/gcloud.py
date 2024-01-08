@@ -6,7 +6,7 @@ import json
 
 def update_models(model="specific"):
     bucket_name = "ppibot-bucket"
-    storage_client = storage.Client()
+    storage_client = storage.Client.create_anonymous_client()
     bucket = storage_client.bucket(bucket_name)
     if model == "specific":
         models = ["TextClassification", "TimeModel", "CountModel", "DataModel"]
