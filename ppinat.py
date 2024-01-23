@@ -7,13 +7,15 @@ from ppinat.ppiparser.ppiannotation import PPIAnnotation, text_by_tag
 from colorama import Fore
 import ppinat.bot.commands as commands
 import utils
+import ppinot4py
+from ppinot4py.computers.metrics_computer import LogConfiguration
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(module)s:%(funcName)s:%(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('log', metavar='LOG', help='Indicates the path of log you want to use', nargs='?', default='./input/event_logs/DomesticDeclarations.xes' )
-parser.add_argument('filename', metavar='FILENAME', help='The file with the test config', nargs='?', default='./config.json' )
+parser.add_argument('filename', metavar='FILENAME', help='The file with the config', nargs='?', default='./config.json' )
 parser.add_argument('-v', '--verbose', action='store_true', help='Prints the results of the parsing and matching')
 
 args = parser.parse_args()
@@ -111,3 +113,5 @@ while True:
     
     print(f"\n{Fore.LIGHTBLUE_EX}Result:{Fore.RESET}")
     print(result.metric)
+
+    print(ppinot4py.measure_computer(result.metric, similarity.df, LogConfiguration(id_case=similarity.id_case, time_column=similarity.time_column, activity_column=similarity.activity)))
