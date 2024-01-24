@@ -1,26 +1,21 @@
 import gzip
 import json
+import logging
 import ssl
+import time
 import urllib
+from enum import Enum
 from os import remove
 from os.path import exists
-from enum import Enum
-import logging
-import time
 
-import pandas as pd
+from colorama import Fore
+from ppinot4py.model import AppliesTo, RuntimeState, TimeInstantCondition
+
 import ppinat.bot.commands as commands
 import ppinat.bot.types as bottypes
 import ppinat.matcher.recognizers as r
-import spacy
-from colorama import Fore
-from ppinat.helpers import load_log
-from ppinat.matcher.similarity import SimilarityComputer
+from ppinat.computer import load_similarity
 from ppinat.ppiparser.ppiannotation import PPIAnnotation, text_by_tag
-from ppinat.ppiparser.transformer import load_transformer, load_general_transformer, load_perfect_decoder, load_transformer_es, load_general_transformer_flant5
-from ppinat.ppiparser.decoder import load_decoder
-from ppinot4py.model import AppliesTo, RuntimeState, TimeInstantCondition
-from ppinat.models.gcloud import update_models
 
 logger = logging.getLogger(__name__)
 
@@ -468,46 +463,7 @@ def write_file(filename, data):
         f.write(data)
         f.close()
 
-def load_similarity(log, metrics, parsing_model, weights):
-    NLP = spacy.load('en_core_web_lg')
-    LOG = load_log(log, id_case="ID", time_column="DATE",
-                activity_column="ACTIVITY")
 
-    logger.info(f"Loading parser {parsing_model}... ")
-
-    if parsing_model == "general":
-        TOKEN_CLASSIFIER = './ppinat/models/GeneralClassifier'
-        DECODER = load_general_transformer(TOKEN_CLASSIFIER)
-        
-    elif parsing_model == "specific":
-        update_models()
-        TEXT_CLASSIFIER = './ppinat/models/TextClassification'
-        TIME_MODEL = './ppinat/models/TimeModel'
-        COUNT_MODEL = './ppinat/models/CountModel'
-        DATA_MODEL = './ppinat/models/DataModel'
-        DECODER = load_transformer(TEXT_CLASSIFIER, TIME_MODEL, COUNT_MODEL, DATA_MODEL)
-    elif parsing_model == "perfect":
-        DECODER = load_perfect_decoder(metrics)
-    elif parsing_model == "specific_es":
-        update_models("specific_es")
-        TEXT_CLASSIFIER = './ppinat/models/TextClassification_es'
-        TIME_MODEL = './ppinat/models/TimeModel_es'
-        COUNT_MODEL = './ppinat/models/CountModel_es'
-        DATA_MODEL = './ppinat/models/DataModel_es'
-        DECODER = load_transformer_es(TEXT_CLASSIFIER, TIME_MODEL, COUNT_MODEL, DATA_MODEL)
-    elif parsing_model == "general_flant5":
-        update_models("general_flant5")
-        PARSER_MODEL = './ppinat/models/GeneralParser_flant5'
-        DECODER = load_general_transformer_flant5(PARSER_MODEL)
-
-    else:
-        TRAINING_FILE = 'input/parser_training/parser_training_data.json'
-        PARSER_SERIAL_FILE = 'input/parser_training/parser_serialized.p'
-        DECODER= load_decoder(NLP, TRAINING_FILE, PARSER_SERIAL_FILE)
-
-    logger.info("Loading similarity computer...")
-    SIMILARITY = SimilarityComputer(LOG, NLP, metric_decoder=DECODER, weights = weights)
-    return SIMILARITY
 
 def aggregate_results(attribute_results):
     return {k: sum([attribute_results[att][k] for att in attribute_results]) for k in ['good', 'partial', 'bad']}
