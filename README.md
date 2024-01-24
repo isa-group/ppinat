@@ -40,7 +40,7 @@ case_end
 Freq: 6M, Name: data, dtype: timedelta64[ns]
 ```
 
-For instance, in the previous case, we are computing the PPI "Average time to payment" using the event log available in the file `path_to_xes_file.xes` and a time aggregation of six months, specified using the option `--time 6M`. The possible values for time aggregation are those described (https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#period-aliases)[here].
+For instance, in the previous case, we are computing the PPI "Average time to payment" using the event log available in the file `path_to_xes_file.xes` and a time aggregation of six months, specified using the option `--time 6M`. The possible values for time aggregation are those described [here](https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#period-aliases).
 
 You can find all the options of the command as follows:
 
