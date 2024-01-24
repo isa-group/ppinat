@@ -40,7 +40,7 @@ case_end
 Freq: 6M, Name: data, dtype: timedelta64[ns]
 ```
 
-For instance, in the previous case, we are computing the PPI "Average time to payment" using the event log available in the file `path_to_xes_file.xes` and a time aggregation of six months, specified using the option `--time 6M`. The possible values for time aggregation are those described [https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#period-aliases](here).
+For instance, in the previous case, we are computing the PPI "Average time to payment" using the event log available in the file `path_to_xes_file.xes` and a time aggregation of six months, specified using the option `--time 6M`. The possible values for time aggregation are those described (https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#period-aliases)[here].
 
 You can find all the options of the command as follows:
 
@@ -99,30 +99,27 @@ ppinat.load_context('filename.xes', 'specific')
 result = ppinat.resolve_compute('Average time to payment', '6M')
 ```
 
-## Datasets
-ppinat comes with three PPI datasets:
-
-- `input/metrics_dataset.json` that was used for training purposes and includes PPIs of the [BPI Challenge 2013 event log](https://data.4tu.nl/ndownloader/files/24033593)
-- `input/metrics_dataset-traffic-test.json` that is a testing dataset of the [Traffic Fines Management Process](https://data.4tu.nl/repository/uuid:270fd440-1057-4fb9-89a9-b699b47990f5)
-- `input/metrics_dataset-domesticDeclarations.json` that is a testing dataset of the [domestic declarations event log of the BPI Challenge 2020](https://data.4tu.nl/ndownloader/files/24031811)
-
-
 ## Parser
 Step 1 is implemented by a parser that performs entity extraction by using a state-of-the-art procedure for token classification.
 This procedure works by fine-tuning a transformer language model with our set of defined entity classes, using a linear layer on top of the hidden-states output of the language model. For building this model, we use the script included in `parser_training/transformer.ipynb`.
 
 A challenge here is that the technique we use requires a considerable amount of training data, especially when dealing with such diverse kinds of (potential) input and entities relevant to our work, which we address through data augmentation. To this end, we define textual patterns commonly found in PPI descriptions. The patterns were handcrafted based on the 165 PPIs from our training collection, making sure that a wide variety of different patterns was included for all measure types. The training phrases generation file with all the patterns is `parser_training/phrases.chatito`. Using these patterns, we use [Chatito](https://rodrigopivi.github.io/Chatito/), which is a natural language generator tool to generate distinct training phrases by combining all different alternatives provided for each pattern.
 
-## Test Collection
-The test collection consists of two data sets: 
-- Its first one was gathered during different BPM courses with undergraduate and master students. They were first introduced some basic concepts on process performance measurement and, more specifically, PPIs. After that, the process of managing road trafic fines was described with the support of a BPMN model (`input/TrafficFinesProcessModel.pdf`). Finally, students were required to define 3 PPIs in natural language for that process, by working either in small groups or individually. These courses were taught at Universidad de Sevilla and at an international winter school, so different nationalities, profiles and backgrounds were present among students. The PPIs gathered in this case as well as the result of the preprocessing and subsequent exclusion of some PPIs are collected in the Excel file `input/TrafficFinesDataset.xlsx`.
-- The second one was collected using an online questionnaire, through which industry and academic users were asked to provide 3 PPI descriptions each, all related to the process to manage reimbursement declarations of domestic travel costs. The online questionnaire can be found here: https://forms.office.com/Pages/ResponsePage.aspx?id=TmhK77WBHEmpjsezG-bEacVp7LJr9DJHpsgYbyyLLxRUQks2REQ2V0FCVzVVQUlTWk1WSDRCSTE3Vy4u and the gathered PPI descriptions together with the rest of the information collected in the online questionnaire are available in the Excel file `input/DomesticDeclarationsDataset.xlsx`.
+To train the parser, we used the PPIs included in `input/metrics_dataset.json` that belong to the [BPI Challenge 2013 event log](https://data.4tu.nl/ndownloader/files/24033593).
+
 
 ## Evaluation
 
+We have exhaustively tested ppinat using two data sets:
+
+- `input/metrics_dataset-traffic-test.json` that is a testing dataset of the [Traffic Fines Management Process](https://data.4tu.nl/repository/uuid:270fd440-1057-4fb9-89a9-b699b47990f5). The PPIs were gathered during different BPM courses with undergraduate and master students. They were first introduced some basic concepts on process performance measurement and, more specifically, PPIs. After that, the process of managing road trafic fines was described with the support of a BPMN model (`input/TrafficFinesProcessModel.pdf`). Finally, students were required to define 3 PPIs in natural language for that process, by working either in small groups or individually. These courses were taught at Universidad de Sevilla and at an international winter school, so different nationalities, profiles and backgrounds were present among students. The PPIs gathered in this case as well as the result of the preprocessing and subsequent exclusion of some PPIs are collected in the Excel file `input/TrafficFinesDataset.xlsx`.
+
+- `input/metrics_dataset-domesticDeclarations.json` that is a testing dataset of the [domestic declarations event log of the BPI Challenge 2020](https://data.4tu.nl/ndownloader/files/24031811). In this case, the PPIs were collected using an online questionnaire, through which industry and academic users were asked to provide 3 PPI descriptions each, all related to the process to manage reimbursement declarations of domestic travel costs. The online questionnaire can be found here: https://forms.office.com/Pages/ResponsePage.aspx?id=TmhK77WBHEmpjsezG-bEacVp7LJr9DJHpsgYbyyLLxRUQks2REQ2V0FCVzVVQUlTWk1WSDRCSTE3Vy4u and the gathered PPI descriptions together with the rest of the information collected in the online questionnaire are available in the Excel file `input/DomesticDeclarationsDataset.xlsx`.
+
+
 A summary of the results obtained after the evaluation against `input/metrics_dataset-traffic-test.json` and `input/metrics_dataset-domesticDeclarations.json` can be found at `results/`.
 
-## Replication of Evaluation
+## Replicability of results
 
 You can replicate the results of the evaluation using the Python script `evaluation.py`:
 
