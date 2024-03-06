@@ -869,9 +869,17 @@ class ComputeMetricCommand(b.PPIBotCommand):
             raise RuntimeError(
                 "A base measure is needed to build the aggregation")
 
+        group_value = None
         if self.groupby is not None:
-            dm = ppinot.DataMeasure(self.groupby.value)
-            dm.id = self.groupby.value
+            if len(self.groupby) > 0:
+                if len(self.groupby[0]) > 0:
+                    group_value = self.groupby[0][0].value
+                elif len(self.groupby[1]) > 0:
+                    group_value = self.groupby[1][0].value
+            
+        if group_value is not None:
+            dm = ppinot.DataMeasure(group_value)
+            dm.id = group_value
             grouper = [dm]
         else:
             grouper = []
