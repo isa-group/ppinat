@@ -156,6 +156,31 @@ class PPINat:
     def resolve_compute(self, ppi, time_grouper=None):
         metric = self.resolve(ppi)
         return self.compute(metric, time_grouper=time_grouper)
+    
+
+
+class PPINot:
+    def __init__(self):
+        self.log = None
+        self.id_case="ID"
+        self.time_column="DATE"
+        self.activity_column="ACTIVITY"
+
+    def load_log(self, log):
+        LOG = load_log(log, id_case=self.id_case, time_column=self.time_column,
+                    activity_column=self.activity_column)
+        
+        self.log = LOG.as_dataframe()
+        self.log_configuration = ppinot4py.computers.LogConfiguration(id_case=self.id_case, time_column=self.time_column, activity_column=self.activity_column)
+
+
+    def compute(self, metric, time_grouper=None):
+        if time_grouper is not None and isinstance(time_grouper, str):
+            time_grouper = pd.Grouper(freq=time_grouper)
+        return ppinot4py.measure_computer(metric, self.log, log_configuration=self.log_configuration, time_grouper=time_grouper)
+
+
+
 
 
 
