@@ -1,8 +1,12 @@
 import logging
+import re
 
 import pandas as pd
 import ppinot4py
 import spacy
+
+import ppinot4py.model as ppinot
+from ppinot4py.model import TimeInstantCondition, RuntimeState, AppliesTo
 
 import ppinat.bot.commands as commands
 import ppinat.matcher.recognizers as r
@@ -159,7 +163,7 @@ class PPINat:
     
 
 
-class PPINot:
+class PPINatJson:
     def __init__(self):
         self.log = None
         self.id_case="ID"
@@ -174,11 +178,85 @@ class PPINot:
         self.log_configuration = ppinot4py.computers.LogConfiguration(id_case=self.id_case, time_column=self.time_column, activity_column=self.activity_column)
 
 
+    def resolve(self, ppi):
+        if "begin" in ppi:
+            from_cond = self._transform_condition(ppi["begin"]) if ppi["begin"] else TimeInstantCondition(
+                            RuntimeState.START, applies_to=AppliesTo.PROCESS)
+            to_cond = self._transform_condition(ppi["end"]) if ppi["end"] else TimeInstantCondition(
+                            RuntimeState.END, applies_to=AppliesTo.PROCESS)
+
+            base_metric = ppinot.TimeMeasure(
+                        from_condition=from_cond,
+                        to_condition=to_cond
+                    )
+
+            aggregation = self._transform_agg(ppi["aggregation"])
+
+        elif "count" in ppi:
+            count_cond = self._transform_condition(ppi["count"])
+            base_metric = ppinot.CountMeasure(count_cond)
+            aggregation = "AVG"
+            
+        other = {}
+
+        if "group_by" in ppi and ppi["group_by"]:
+            other["grouper"] = [ppinot.DataMeasure(ppi["group_by"])]
+
+        if "filter" in ppi and ppi["filter"]:
+            left, op, right = self._separate_logical_expression(ppi["filter"])
+            if left == "activity":
+                bm = ppinot.CountMeasure(f"`{self.activity_column}` {op} {right}")
+                other["filter_to_apply"] = ppinot.DerivedMeasure(function_expression=f"ma > 0",
+                                                            measure_map={"ma": bm})
+            elif left in self.log.columns:
+                bm = ppinot.DataMeasure(left)
+                other["filter_to_apply"] = ppinot.DerivedMeasure(function_expression=f"ma {op} {right}",
+                                                            measure_map={"ma": bm})
+            else:
+                logger.warning(f"Unknown filter: {ppi['filter']}. It will be ignored")
+
+        metric = ppinot.AggregatedMeasure(
+            base_measure=base_metric,
+            single_instance_agg_function=aggregation,        
+            **other
+        )
+
+        return metric
+
+    def _transform_condition(self, cond): 
+        left, op, right = self._separate_logical_expression(cond)
+        if left == "activity":
+            left = self.activity_column
+        elif left not in self.log.columns:
+            logger.warning(f"Unknown condition: {cond}")    
+        
+        return f"`{left}` {op} {right}"
+
+    def _transform_agg(self, agg):
+        if agg == "average":
+            return "AVG"
+        else:
+            return agg.upper()
+
+    def _separate_logical_expression(self, expression):
+        # Use regular expression to find the logical operator
+        match = re.search(r'(\s*[\w\s:$#]+)\s*([!=<>]+)\s*([\w\s:$#\'\"]+)\s*', expression)
+        if match:
+            left_side = match.group(1).strip()
+            operator = match.group(2).strip()
+            right_side = match.group(3).strip()
+            return left_side, operator, right_side
+        else:
+            return None
+
     def compute(self, metric, time_grouper=None):
         if time_grouper is not None and isinstance(time_grouper, str):
             time_grouper = pd.Grouper(freq=time_grouper)
         return ppinot4py.measure_computer(metric, self.log, log_configuration=self.log_configuration, time_grouper=time_grouper)
 
+    def resolve_compute(self, json_ppi, time_grouper=None):
+        metric = self.resolve(ppi)
+        return self.compute(metric, time_grouper=time_grouper)
 
 
 

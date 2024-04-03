@@ -2,14 +2,10 @@ import argparse
 import json
 import logging
 import sys
-import re
-
-import ppinot4py.model as ppinot
-from ppinot4py.model import TimeInstantCondition, RuntimeState, AppliesTo
 
 from colorama import Fore
 
-from ppinat.computer import PPINat, PPINot
+from ppinat.computer import PPINat, PPINatJson
 from ppinat.ppiparser.ppiannotation import PPIAnnotation, text_by_tag
 
 logger = logging.getLogger(__name__)
@@ -79,80 +75,15 @@ def process_json(ppi, ppinat, args):
     if args.verbose:
         print(f"\n{ppi}")
 
-    if "begin" in ppi:
-        from_cond = transform_condition(ppi["begin"], ppinat) if ppi["begin"] else TimeInstantCondition(
-                        RuntimeState.START, applies_to=AppliesTo.PROCESS)
-        to_cond = transform_condition(ppi["end"], ppinat) if ppi["end"] else TimeInstantCondition(
-                        RuntimeState.END, applies_to=AppliesTo.PROCESS)
-
-        base_metric = ppinot.TimeMeasure(
-                    from_condition=from_cond,
-                    to_condition=to_cond
-                )
-
-        aggregation = transform_agg(ppi["aggregation"])
-
-    elif "count" in ppi:
-        count_cond = transform_condition(ppi["count"], ppinat)
-        base_metric = ppinot.CountMeasure(count_cond)
-        aggregation = "AVG"
-        
-    other = {}
-
-    if "group_by" in ppi and ppi["group_by"]:
-        other["grouper"] = [ppinot.DataMeasure(ppi["group_by"])]
-
-    if "filter" in ppi and ppi["filter"]:
-        left, op, right = separate_logical_expression(ppi["filter"])
-        if left == "activity":
-            bm = ppinot.CountMeasure(f"`{ppinat.activity_column}` {op} {right}")
-            other["filter_to_apply"] = ppinot.DerivedMeasure(function_expression=f"ma > 0",
-                                                        measure_map={"ma": bm})
-        elif left in ppinat.log.columns:
-            bm = ppinot.DataMeasure(left)
-            other["filter_to_apply"] = ppinot.DerivedMeasure(function_expression=f"ma {op} {right}",
-                                                        measure_map={"ma": bm})
-        else:
-            logger.warning(f"Unknown filter: {ppi['filter']}. It will be ignored")
-
-    metric = ppinot.AggregatedMeasure(
-        base_measure=base_metric,
-        single_instance_agg_function=aggregation,        
-        **other
-    )
+    metric = ppinat.resolve(ppi)
 
     if args.verbose:        
         print(f"{metric}")
         if args.time:
             print(f"Time group: {args.time}")
-            
+
     print(ppinat.compute(metric, time_grouper=args.time))
 
-def transform_condition(cond, ppinat): 
-    left, op, right = separate_logical_expression(cond)
-    if left == "activity":
-        left = ppinat.activity_column
-    elif left not in ppinat.log.columns:
-        logger.warning(f"Unknown condition: {cond}")    
-    
-    return f"`{left}` {op} {right}"
-
-def transform_agg(agg):
-    if agg == "average":
-        return "AVG"
-    else:
-        return agg.upper()
-
-def separate_logical_expression(expression):
-    # Use regular expression to find the logical operator
-    match = re.search(r'(\s*[\w\s:$#]+)\s*([!=<>]+)\s*([\w\s:$#\'\"]+)\s*', expression)
-    if match:
-        left_side = match.group(1).strip()
-        operator = match.group(2).strip()
-        right_side = match.group(3).strip()
-        return left_side, operator, right_side
-    else:
-        return None
 
 def load_config(args):
     config = {}
@@ -216,7 +147,7 @@ elif args.file is not None:
         process_ppi(line, ppinat, args)    
 
 elif args.json is not None:
-    ppinat = PPINot()
+    ppinat = PPINatJson()
     ppinat.load_log(args.log)
 
     with open(args.json, "r") as ppis_file:
