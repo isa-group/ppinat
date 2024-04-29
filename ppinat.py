@@ -75,14 +75,20 @@ def process_json(ppi, ppinat, args):
     if args.verbose:
         print(f"\n{ppi}")
 
-    metric = ppinat.resolve(ppi)
+    try:
+        metric = ppinat.resolve(ppi["PPI json"])
+    except:
+        logger.exception(f"ERROR: processing metric {ppi['PPI json']} ")
 
     if args.verbose:        
         print(f"{metric}")
         if args.time:
             print(f"Time group: {args.time}")
 
-    print(ppinat.compute(metric, time_grouper=args.time))
+    try:
+        print(ppinat.compute(metric, time_grouper=args.time))
+    except:
+        logger.exception(f"ERROR: computing metric {ppi['PPI json']}")
 
 
 def load_config(args):

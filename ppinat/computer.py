@@ -235,6 +235,12 @@ class PPINatJson:
     def _transform_agg(self, agg):
         if agg == "average":
             return "AVG"
+        elif agg == "total":
+            return "SUM"
+        elif agg == "minimum":
+            return "MIN"
+        elif agg == "maximum":
+            return "MAX"
         else:
             return agg.upper()
 
